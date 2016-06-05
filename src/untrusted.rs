@@ -12,66 +12,76 @@
 // ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-//! The Input/Reader framework for safe, fast, zero-heap-usage protocol parsing.
+//! untrusted.rs: Safe, fast, zero-panic, zero-crashing, zero-allocation
+//! parsing of untrusted inputs in Rust.
 //!
-//! The Input/Reader framework goes beyond Rust's normal safety guarantees by
-//! also guaranteeing that parsing will be panic-free, as long as
-//! `Input::as_slice_less_safe` is not used. It avoids copying data and heap
-//! allocation and strives to prevent common pitfalls such as accidentally
-//! parsing input bytes multiple times. In order to meet these goals, the
-//! Input/Reader framework is limited in functionality such that it works best
-//! for input languages with a small fixed amount of lookahead such as ASN.1,
-//! TLS, TCP/IP, and many other networking, IPC, and related protocols.
-//! Input languages that require more lookahead and/or backtracking require
-//! some significant contortions to parse using this framework. It would not be
-//! realistic to use it for parsing programming language code or natural
-//! language text, for example.
+//! untrusted.rs goes beyond Rust's normal safety guarantees by  also
+//! guaranteeing that parsing will be panic-free, as long as
+//! `untrusted::Input::as_slice_less_safe()` is not used. It avoids copying
+//! data and heap allocation and strives to prevent common pitfalls such as
+//! accidentally parsing input bytes multiple times. In order to meet these
+//! goals, untrusted.rs is limited in functionality such that it works best for
+//! input languages with a small fixed amount of lookahead such as ASN.1, TLS,
+//! TCP/IP, and many other networking, IPC, and related protocols. Languages
+//! that require more lookahead and/or backtracking require some significant
+//! contortions to parse using this framework. It would not be realistic to use
+//! it for parsing programming language code, for example.
 //!
-//! The overall pattern for using the Input/Reader framework is:
+//! The overall pattern for using untrusted.rs is:
 //!
 //! 1. Write a recursive-descent-style parser for the input language, where the
-//!    input data is given as a `&mut Reader` parameter to each function. Each
-//!    function should have a return type of `Result<V, E>` for some value type
-//!    `V` and some error type `E`, either or both of which may be `()`.
-//!    Functions for parsing the lowest-level language constructs should be
-//!    defined. Those lowest-level functions will parse their inputs using
-//!    `Reader::read_byte`, `Reader::peek`, and similar functions. Higher-level
-//!    language constructs are then parsed by calling the lower-level functions
-//!    in sequence.
+//!    input data is given as a `&mut untrusted::Reader` parameter to each
+//!    function. Each function should have a return type of `Result<V, E>` for
+//!    some value type `V` and some error type `E`, either or both of which may
+//!    be `()`. Functions for parsing the lowest-level language constructs
+//!    should be defined. Those lowest-level functions will parse their inputs
+//!    using `::read_byte()`, `Reader::peek()`, and similar functions.
+//!    Higher-level language constructs are then parsed by calling the
+//!    lower-level functions in sequence.
 //!
 //! 2. Wrap the top-most functions of your recursive-descent parser in
-//!    functions that take their input data as an `Input`. The wrapper
-//!    functions should pass the `Input` to `read_all` or one of the variants.
-//!    The wrapper functions are the only ones that should be exposed outside
-//!    the parser's module.
+//!    functions that take their input data as an `untrusted::Input`. The
+//!    wrapper functions should pass the `untrusted::Input` to
+//!    `untrusted::read_all` or one of the variants. The wrapper functions are
+//!    the only ones that should be exposed outside the parser's module.
 //!
-//! 3. After receiving the input data to parse, wrap it in an `Input` using
-//!    `Input::new` as early as possible. Pass the `Input` to the wrapper
-//!    functions when they need to be parsed.
+//! 3. After receiving the input data to parse, wrap it in an `untrusted::Input`
+//!    using `untrusted::Input::new()` as early as possible. Pass the
+//!    `untrusted::Input` to the wrapper functions when they need to be parsed.
 //!
-//! In general parsers built using `Reader` do not need to explicitly check
-//! for end-of-input unless they are parsing optional constructs, because
+//! In general parsers built using `untrusted::Reader` do not need to explicitly
+//! check for end-of-input unless they are parsing optional constructs, because
 //! `Reader::read_byte()` will return `Err(())` on end-of-input. Similarly,
-//! parsers using `Reader` generally don't need to check for extra junk at the
-//! end of the input as long as the parser's API uses the pattern described
-//! above, as `read_all` and its variants automatically check for trailing
-//! junk. `Reader::skip_to_end` should be used when the end of the input should
-//! be ignored without triggering an error.
+//! parsers using `untrusted::Reader` generally don't need to check for extra
+//! junk at the end of the input as long as the parser's API uses the pattern
+//! described above, as `read_all` and its variants automatically check for
+//! trailing junk. `Reader::skip_to_end()` must be used when any remaining unread
+//! input should be ignored without triggering an error.
 //!
-//! The Input/Reader framework works best when all processing of the input data
-//! is done through the `Input` and `Reader` types. In particular, avoid trying
-//! to parse input data using functions that take slices. However, when you
-//! need to access a part of the input data as a slice,
-//! `Input::as_slice_less_safe` can be used. *ring* is in the process of
-//! migrating fully to using `Input` for all inputs to the crypto functions,
-//! which means that `Input::as_slice_less_safe` currently needs to be used
-//! frequently to use *ring*'s crypto functionality. This will change soon.
+//! untrusted.rs works best when all processing of the input data is done
+//! through the `untrusted::Input` and `untrusted::Reader` types. In
+//! particular, avoid trying to parse input data using functions that take
+//! byte slices. However, when you need to access a part of the input data as
+//! a slice to use a function that isn't written using untrusted.rs,
+//! `Input::as_slice_less_safe()` can be used.
 //!
-//! [libwebpki](https://github.com/briansmith/webpki)'s X.509 certificate
-//! parser is a good example of a real-world use of the Input/Reader framework
-//! to parse complex data.
+//! It is recommend to use `use untrusted;` and then `untrusted::Input`,
+//! `untrusted::Reader`, `untrusted::read_all`, etc., instead of using
+//! `use untrusted::*`. Qualifying the names with `untrusted` helps remind the
+//! reader of the code that it is dealing with *untrusted* input.
+//!
+//! # Examples
+//! 
+//! [*ring*](https://github.com/briansmith/ring)'s parser for the subset of
+//! ASN.1 DER it needs to understand,
+//! [`ring::der`](https://github.com/briansmith/ring/blob/master/src/der.rs),
+//! is built on top of untrusted.rs. *ring* also uses untrusted.rs to parse ECC
+//! public keys, RSA PKCS#1 1.5 padding, and for all other parsing it does.
+//!
+//! All of [webpki](https://github.com/briansmith/webpki)'s parsing of X.509
+//! certificates (also ASN.1 DER) is done using untrusted.rs.
 
-use core;
+#![no_std]
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. If `read` does not consume the entire input,
@@ -235,7 +245,7 @@ impl<'a> Reader<'a> {
     pub fn read_byte(&mut self) -> Result<u8, ()> {
         match self.input.get(self.i) {
             Some(b) => {
-                self.i += 1; // safe from overflow; see Input::new.
+                self.i += 1; // safe from overflow; see Input::new().
                 Ok(*b)
             }
             None => Err(())
