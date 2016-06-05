@@ -41,9 +41,9 @@
 //!
 //! 2. Wrap the top-most functions of your recursive-descent parser in
 //!    functions that take their input data as an `untrusted::Input`. The
-//!    wrapper functions should pass the `untrusted::Input` to
-//!    `untrusted::read_all` or one of the variants. The wrapper functions are
-//!    the only ones that should be exposed outside the parser's module.
+//!    wrapper functions should call the `Input`'s `read_all` (or a variant
+//!    thereof) method. The wrapper functions are the only ones that should be
+//!    exposed outside the parser's module.
 //!
 //! 3. After receiving the input data to parse, wrap it in an `untrusted::Input`
 //!    using `untrusted::Input::new()` as early as possible. Pass the
@@ -66,12 +66,12 @@
 //! `Input::as_slice_less_safe()` can be used.
 //!
 //! It is recommend to use `use untrusted;` and then `untrusted::Input`,
-//! `untrusted::Reader`, `untrusted::read_all`, etc., instead of using
-//! `use untrusted::*`. Qualifying the names with `untrusted` helps remind the
-//! reader of the code that it is dealing with *untrusted* input.
+//! `untrusted::Reader`, etc., instead of using `use untrusted::*`. Qualifying
+//! the names with `untrusted` helps remind the reader of the code that it is
+//! dealing with *untrusted* input.
 //!
 //! # Examples
-//! 
+//!
 //! [*ring*](https://github.com/briansmith/ring)'s parser for the subset of
 //! ASN.1 DER it needs to understand,
 //! [`ring::der`](https://github.com/briansmith/ring/blob/master/src/der.rs),
@@ -82,57 +82,6 @@
 //! certificates (also ASN.1 DER) is done using untrusted.rs.
 
 #![no_std]
-
-/// Calls `read` with the given input as a `Reader`, ensuring that `read`
-/// consumed the entire input. If `read` does not consume the entire input,
-/// `incomplete_read` is returned.
-pub fn read_all<'a, F, R, E>(input: Input<'a>, incomplete_read: E, read: F)
-                             -> Result<R, E>
-                             where F: FnOnce(&mut Reader<'a>) -> Result<R, E> {
-    let mut input = Reader::new(input);
-    let result = try!(read(&mut input));
-    if input.at_end() {
-        Ok(result)
-    } else {
-        Err(incomplete_read)
-    }
-}
-
-/// Like `read_all`, except taking an `FnMut`.
-pub fn read_all_mut<'a, F, R, E>(input: Input<'a>, incomplete_read: E, mut read: F)
-                                 -> Result<R, E>
-                                 where F: FnMut(&mut Reader<'a>)
-                                                -> Result<R, E> {
-    let mut input = Reader::new(input);
-    let result = try!(read(&mut input));
-    if input.at_end() {
-        Ok(result)
-    } else {
-        Err(incomplete_read)
-    }
-}
-
-/// Calls `read` with the given input as a `Reader`, ensuring that `read`
-/// consumed the entire input. When `input` is `None`, `read` will be called
-/// with `None`.
-pub fn read_all_optional<'a, F, R, E>(input: Option<Input<'a>>,
-                                      incomplete_read: E, read: F)
-                                      -> Result<R, E>
-                                      where F: FnOnce(Option<&mut Reader>)
-                                                      -> Result<R, E> {
-    match input {
-        Some(input) => {
-            let mut input = Reader::new(input);
-            let result = try!(read(Some(&mut input)));
-            if input.at_end() {
-                Ok(result)
-            } else {
-                Err(incomplete_read)
-            }
-        },
-        None => read(None)
-    }
-}
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
 ///
@@ -162,6 +111,36 @@ impl<'a> Input<'a> {
     #[inline]
     pub fn len(&self) -> usize { self.value.len() }
 
+
+    /// Calls `read` with the given input as a `Reader`, ensuring that `read`
+    /// consumed the entire input. If `read` does not consume the entire input,
+    /// `incomplete_read` is returned.
+    pub fn read_all<F, R, E>(&self, incomplete_read: E, read: F)
+                             -> Result<R, E>
+                             where F: FnOnce(&mut Reader<'a>) -> Result<R, E> {
+        let mut input = Reader::new(*self);
+        let result = try!(read(&mut input));
+        if input.at_end() {
+            Ok(result)
+        } else {
+            Err(incomplete_read)
+        }
+    }
+
+    /// Like `read_all`, except taking an `FnMut`.
+    pub fn read_all_mut<F, R, E>(&self, incomplete_read: E, mut read: F)
+                                 -> Result<R, E>
+                                 where F: FnMut(&mut Reader<'a>)
+                                                -> Result<R, E> {
+        let mut input = Reader::new(*self);
+        let result = try!(read(&mut input));
+        if input.at_end() {
+            Ok(result)
+        } else {
+            Err(incomplete_read)
+        }
+    }
+
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
     #[inline]
@@ -173,6 +152,29 @@ impl<'a> Input<'a> {
 impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
     fn eq(&self, other: &&'b [u8]) -> bool {
         self.as_slice_less_safe() == *other
+    }
+}
+
+
+/// Calls `read` with the given input as a `Reader`, ensuring that `read`
+/// consumed the entire input. When `input` is `None`, `read` will be
+/// called with `None`.
+pub fn read_all_optional<'a, F, R, E>(input: Option<Input<'a>>,
+                                      incomplete_read: E, read: F)
+                                      -> Result<R, E>
+                                      where F: FnOnce(Option<&mut Reader>)
+                                                      -> Result<R, E> {
+    match input {
+        Some(input) => {
+            let mut input = Reader::new(input);
+            let result = try!(read(Some(&mut input)));
+            if input.at_end() {
+                Ok(result)
+            } else {
+                Err(incomplete_read)
+            }
+        },
+        None => read(None)
     }
 }
 
