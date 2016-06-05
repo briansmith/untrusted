@@ -14,9 +14,10 @@ untrusted.rs
 Safe, fast, zero-panic, zero-crashing, zero-allocation parsing of untrusted
 inputs in Rust.
 
-untrusted.rs is 100% Rust with no use of `unsafe`. It is `#![no_std]` and so
-it works perfectly with both libcore- and libstd- based projects. It never uses
-the heap. No part of untrusted.rs's API will ever panic or cause a crash.
+untrusted.rs is 100% Rust with no use of `unsafe`. It never uses the heap.
+No part of untrusted.rs's API will ever panic or cause a crash. It is
+`#![no_std]` and so it works perfectly with both libcore- and libstd- based
+projects. It does not depend on any crates other than libcore.
 
 
 
@@ -77,22 +78,13 @@ Currently, the biggest needs for this library are:
 Online Automated Testing
 ------------------------
 
-Travis CI is used for Android, Linux, and Mac OS X. Appveyor is used for
-Windows. The tests are run in debug and release configurations, for the current
-release of each Rust channel (Stable, Beta, Nightly), for each configuration
-listed in the table below.
+Travis CI is used for Android, Linux, and Mac OS X. The tests are run for the
+current release of each Rust channel (Stable, Beta, Nightly). Since
+untrusted.rs only depends on libcore and it only uses 100% cross-platform code
+without using `unsafe`, it should work anywhere as long as these platforms are
+passing.
 
-<table>
-<tr><th>OS</th><th>Status</th>
-<tr><td >Linux</td>
-    <td rowspan=3><a title="Build Status" href=https://travis-ci.org/briansmith/unrusted><img src=https://travis-ci.org/briansmith/unrusted.svg?branch=master></a>
-</tr>
-<tr><td>Android</td></tr>
-<tr><td>Mac&nbsp;OS&nbsp;X</td></tr>
-<tr><td>Windows</td>
-    <td><a title="Build Status" href=https://ci.appveyor.com/project/briansmith/unrusted/branch/master><img src="TODO"></a>
-</tr>
-</table>
+<a title="Build Status" href=https://travis-ci.org/briansmith/unrusted><img src=https://travis-ci.org/briansmith/unrusted.svg?branch=master></a>
 
 
 
