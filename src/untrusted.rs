@@ -137,7 +137,7 @@ pub fn read_all_optional<'a, F, R, E>(input: Option<Input<'a>>,
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
 ///
 /// No methods of `Input` will ever panic.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Input<'a> {
     value: no_panic::NoPanicSlice<'a>
 }
@@ -170,12 +170,12 @@ impl<'a> Input<'a> {
     }
 }
 
-/// Returns `true` if the contents of `Input` `a` are equal to the contents of
-/// slice `b`, and `false` otherwise.
-#[inline]
-pub fn input_equals(a: Input, b: &[u8]) -> bool {
-    a.value.as_slice_less_safe() == b
+impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
+    fn eq(&self, other: &&'b [u8]) -> bool {
+        self.as_slice_less_safe() == *other
+    }
 }
+
 
 /// A read-only, forward-only* cursor into the data in an `Input`.
 ///
@@ -285,7 +285,7 @@ impl<'a> Reader<'a> {
 mod no_panic {
 
 /// A wrapper around a slice that exposes no functions that can panic.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct NoPanicSlice<'a> {
     bytes: &'a [u8]
 }
