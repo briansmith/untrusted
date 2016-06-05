@@ -109,5 +109,4 @@ any security vulnerability in this code privately to anybody.**
 License
 -------
 
-See [LICENSE](LICENSE). It's based on the ISC license, a simplified form of the
-MIT license.
+See [LICENSE.txt](LICENSE.txt), an ISC-style (simplified MIT) license.
