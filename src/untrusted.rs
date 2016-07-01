@@ -46,7 +46,7 @@
 //!    exposed outside the parser's module.
 //!
 //! 3. After receiving the input data to parse, wrap it in an `untrusted::Input`
-//!    using `untrusted::Input::new()` as early as possible. Pass the
+//!    using `untrusted::Input::from()` as early as possible. Pass the
 //!    `untrusted::Input` to the wrapper functions when they need to be parsed.
 //!
 //! In general parsers built using `untrusted::Reader` do not need to explicitly
@@ -93,14 +93,14 @@ pub struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
-    pub fn new(bytes: &'a [u8]) -> Result<Input<'a>, ()> {
+    pub fn from(bytes: &'a [u8]) -> Input<'a> {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
-        // not return `None`.
-        if bytes.len() > core::usize::MAX - 1 {
-            return Err(())
-        }
-        Ok(Input { value: no_panic::NoPanicSlice::new(bytes) })
+        // not return `None`. According to the Rust language reference, the
+        // maximum object size is `core::isize::MAX`, and in practice it is
+        // impossible to create an object of size `core::usize::MAX` or larger.
+        debug_assert!(bytes.len() < core::usize::MAX);
+        Input { value: no_panic::NoPanicSlice::new(bytes) }
     }
 
     /// Returns `true` if the input is empty and false otherwise.
@@ -247,7 +247,7 @@ impl<'a> Reader<'a> {
     pub fn read_byte(&mut self) -> Result<u8, ()> {
         match self.input.get(self.i) {
             Some(b) => {
-                self.i += 1; // safe from overflow; see Input::new().
+                self.i += 1; // safe from overflow; see Input::from().
                 Ok(*b)
             }
             None => Err(())
