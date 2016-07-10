@@ -318,3 +318,58 @@ impl<'a> NoPanicSlice<'a> {
 }
 
 } // mod no_panic
+
+#[cfg(test)]
+mod tests {
+    use super::Input;
+
+    #[test]
+    fn test_input_from() {
+        let _ = Input::from(b"foo");
+    }
+
+    #[test]
+    fn test_input_is_empty() {
+        let input = Input::from(b"");
+        assert!(input.is_empty());
+        let input = Input::from(b"foo");
+        assert!(!input.is_empty());
+    }
+
+    #[test]
+    fn test_input_len() {
+        let input = Input::from(b"foo");
+        assert_eq!(input.len(), 3);
+    }
+
+    #[test]
+    fn test_input_read_all() {
+        let input = Input::from(b"foo");
+        let result = input.read_all((), |input| {
+            assert_eq!(b'f', try!(input.read_byte()));
+            assert_eq!(b'o', try!(input.read_byte()));
+            assert_eq!(b'o', try!(input.read_byte()));
+            assert!(input.at_end());
+            Ok(())
+        });
+        assert_eq!(result, Ok(()));
+    }
+
+    #[test]
+    fn test_input_read_all_unconsume() {
+        let input = Input::from(b"foo");
+        let result = input.read_all((), |input| {
+            assert_eq!(b'f', try!(input.read_byte()));
+            assert!(!input.at_end());
+            Ok(())
+        });
+        assert_eq!(result, Err(()));
+    }
+
+    #[test]
+    fn test_input_as_slice_less_safe() {
+        let slice = b"foo";
+        let input = Input::from(slice);
+        assert_eq!(input.as_slice_less_safe(), slice);
+    }
+}
