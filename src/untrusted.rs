@@ -93,6 +93,14 @@ pub struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let input = Input::from(b"foo");
+    /// ```
     pub fn from(bytes: &'a [u8]) -> Input<'a> {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
@@ -104,10 +112,31 @@ impl<'a> Input<'a> {
     }
 
     /// Returns `true` if the input is empty and false otherwise.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let input = Input::from(b"");
+    /// assert!(input.is_empty());
+    ///
+    /// let input = Input::from(b"foo");
+    /// assert!(!input.is_empty());
+    /// ```
     #[inline]
     pub fn is_empty(&self) -> bool { self.value.len() == 0 }
 
     /// Returns the length of the `Input`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let input = Input::from(b"foo");
+    /// assert_eq!(input.len(), 3);
+    /// ```
     #[inline]
     pub fn len(&self) -> usize { self.value.len() }
 
@@ -115,6 +144,38 @@ impl<'a> Input<'a> {
     /// Calls `read` with the given input as a `Reader`, ensuring that `read`
     /// consumed the entire input. If `read` does not consume the entire input,
     /// `incomplete_read` is returned.
+    ///
+    /// # Examples
+    ///
+    /// `read` consumes entire input:
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let input = Input::from(b"foo");
+    /// let result = input.read_all((), |input| {
+    ///     assert_eq!(b'f', try!(input.read_byte()));
+    ///     assert_eq!(b'o', try!(input.read_byte()));
+    ///     assert_eq!(b'o', try!(input.read_byte()));
+    ///     assert!(input.at_end());
+    ///     Ok(())
+    /// });
+    /// assert!(result.is_ok());
+    /// ```
+    ///
+    /// `read` does *not* consume entire input:
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let input = Input::from(b"foo");
+    /// let result = input.read_all((), |input| {
+    ///     assert_eq!(b'f', try!(input.read_byte()));
+    ///     assert!(!input.at_end());
+    ///     Ok(())
+    /// });
+    /// assert!(result.is_err());
+    /// ```
     pub fn read_all<F, R, E>(&self, incomplete_read: E, read: F)
                              -> Result<R, E>
                              where F: FnOnce(&mut Reader<'a>) -> Result<R, E> {
@@ -143,6 +204,16 @@ impl<'a> Input<'a> {
 
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use untrusted::Input;
+    ///
+    /// let slice = b"foo";
+    /// let input = Input::from(slice);
+    /// assert_eq!(input.as_slice_less_safe(), slice);
+    /// ```
     #[inline]
     pub fn as_slice_less_safe(&self) -> &'a [u8] {
         self.value.as_slice_less_safe()
