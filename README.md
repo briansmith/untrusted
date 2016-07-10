@@ -32,7 +32,7 @@ Cargo.toml like this:
 
 ```
 [dependencies]
-rust-untrusted = { git = "https://github.com/briansmith/untrusted" }
+untrusted = "0.2"
 ```
 
 
