@@ -51,12 +51,12 @@
 //!
 //! In general parsers built using `untrusted::Reader` do not need to explicitly
 //! check for end-of-input unless they are parsing optional constructs, because
-//! `Reader::read_byte()` will return `Err(())` on end-of-input. Similarly,
-//! parsers using `untrusted::Reader` generally don't need to check for extra
-//! junk at the end of the input as long as the parser's API uses the pattern
-//! described above, as `read_all` and its variants automatically check for
-//! trailing junk. `Reader::skip_to_end()` must be used when any remaining unread
-//! input should be ignored without triggering an error.
+//! `Reader::read_byte()` will return `Err(EndOfInput)` on end-of-input.
+//! Similarly, parsers using `untrusted::Reader` generally don't need to check
+//! for extra junk at the end of the input as long as the parser's API uses the
+//! pattern described above, as `read_all` and its variants automatically check
+//! for trailing junk. `Reader::skip_to_end()` must be used when any remaining
+//! unread input should be ignored without triggering an error.
 //!
 //! untrusted.rs works best when all processing of the input data is done
 //! through the `untrusted::Input` and `untrusted::Reader` types. In
@@ -220,10 +220,10 @@ impl<'a> Reader<'a> {
     /// marked using `mark`.
     #[inline]
     pub fn get_input_between_marks(&self, mark1: Mark, mark2: Mark)
-                                   -> Result<Input<'a>, ()> {
+                                   -> Result<Input<'a>, EndOfInput> {
         self.input.subslice(mark1.i, mark2.i)
                   .map(|subslice| Input { value: subslice })
-                  .ok_or(())
+                  .ok_or(EndOfInput)
     }
 
     /// Return the current position of the `Reader` for future use in a call
@@ -242,36 +242,36 @@ impl<'a> Reader<'a> {
 
     /// Reads the next input byte.
     ///
-    /// Returns `Ok(b)` where `b` is the next input byte, or `Err(())` if the
-    /// `Reader` is at the end of the input.
-    pub fn read_byte(&mut self) -> Result<u8, ()> {
+    /// Returns `Ok(b)` where `b` is the next input byte, or `Err(EndOfInput)`
+    /// if the `Reader` is at the end of the input.
+    pub fn read_byte(&mut self) -> Result<u8, EndOfInput> {
         match self.input.get(self.i) {
             Some(b) => {
                 self.i += 1; // safe from overflow; see Input::from().
                 Ok(*b)
             }
-            None => Err(())
+            None => Err(EndOfInput)
         }
     }
 
     /// Skips `num_bytes` of the input.
     ///
     /// Returns `Ok(())` if there are at least `num_bytes` of input remaining,
-    /// and `Err(())` otherwise.
-    pub fn skip(&mut self, num_bytes: usize) -> Result<(), ()> {
+    /// and `Err(EndOfInput)` otherwise.
+    pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
         self.skip_and_get_input(num_bytes).map(|_| ())
     }
 
     /// Skips `num_bytes` of the input, returning the skipped input as an `Input`.
     ///
     /// Returns `Ok(i)` where `i` is an `Input` if there are at least
-    /// `num_bytes` of input remaining, and `Err(())` otherwise.
+    /// `num_bytes` of input remaining, and `Err(EndOfInput)` otherwise.
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
-                              -> Result<Input<'a>, ()> {
-        let new_i = try!(self.i.checked_add(num_bytes).ok_or(()));
+                              -> Result<Input<'a>, EndOfInput> {
+        let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
         let ret = self.input.subslice(self.i, new_i)
                             .map(|subslice| Input { value: subslice })
-                            .ok_or(());
+                            .ok_or(EndOfInput);
         self.i = new_i;
         ret
     }
@@ -283,6 +283,11 @@ impl<'a> Reader<'a> {
         self.skip_and_get_input(to_skip).unwrap()
     }
 }
+
+/// The error type used to indicate the end of the input was reached before the
+/// operation could be completed.
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub struct EndOfInput;
 
 mod no_panic {
 
@@ -321,7 +326,7 @@ impl<'a> NoPanicSlice<'a> {
 
 #[cfg(test)]
 mod tests {
-    use super::Input;
+    use super::*;
 
     #[test]
     fn test_input_from() {
@@ -345,7 +350,7 @@ mod tests {
     #[test]
     fn test_input_read_all() {
         let input = Input::from(b"foo");
-        let result = input.read_all((), |input| {
+        let result = input.read_all(EndOfInput, |input| {
             assert_eq!(b'f', try!(input.read_byte()));
             assert_eq!(b'o', try!(input.read_byte()));
             assert_eq!(b'o', try!(input.read_byte()));
@@ -358,12 +363,12 @@ mod tests {
     #[test]
     fn test_input_read_all_unconsume() {
         let input = Input::from(b"foo");
-        let result = input.read_all((), |input| {
+        let result = input.read_all(EndOfInput, |input| {
             assert_eq!(b'f', try!(input.read_byte()));
             assert!(!input.at_end());
             Ok(())
         });
-        assert_eq!(result, Err(()));
+        assert_eq!(result, Err(EndOfInput));
     }
 
     #[test]
