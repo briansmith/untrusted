@@ -81,6 +81,8 @@
 //! All of [webpki](https://github.com/briansmith/webpki)'s parsing of X.509
 //! certificates (also ASN.1 DER) is done using untrusted.rs.
 
+#![doc(html_root_url="https://briansmith.org/rustdoc/")]
+
 #![no_std]
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
