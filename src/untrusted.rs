@@ -15,6 +15,8 @@
 //! untrusted.rs: Safe, fast, zero-panic, zero-crashing, zero-allocation
 //! parsing of untrusted inputs in Rust.
 //!
+//! <code>git clone https://github.com/briansmith/untrusted</code>
+//!
 //! untrusted.rs goes beyond Rust's normal safety guarantees by  also
 //! guaranteeing that parsing will be panic-free, as long as
 //! `untrusted::Input::as_slice_less_safe()` is not used. It avoids copying
