@@ -111,10 +111,15 @@ impl<'a> Input<'a> {
     #[inline]
     pub fn is_empty(&self) -> bool { self.value.len() == 0 }
 
+    /// Returns an iterator over the input.
+    #[inline]
+    pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter {
+        self.value.iter()
+    }
+
     /// Returns the length of the `Input`.
     #[inline]
     pub fn len(&self) -> usize { self.value.len() }
-
 
     /// Calls `read` with the given input as a `Reader`, ensuring that `read`
     /// consumed the entire input. If `read` does not consume the entire input,
@@ -309,6 +314,11 @@ impl<'a> Slice<'a> {
 
     #[inline]
     pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
+
+    #[inline]
+    pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
+        self.bytes.into_iter()
+    }
 
     #[inline]
     pub fn len(&self) -> usize { self.bytes.len() }
