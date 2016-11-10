@@ -92,7 +92,7 @@
 /// No methods of `Input` will ever panic.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Input<'a> {
-    value: no_panic::NoPanicSlice<'a>
+    value: no_panic::Slice<'a>
 }
 
 impl<'a> Input<'a> {
@@ -104,7 +104,7 @@ impl<'a> Input<'a> {
         // maximum object size is `core::isize::MAX`, and in practice it is
         // impossible to create an object of size `core::usize::MAX` or larger.
         debug_assert!(bytes.len() < core::usize::MAX);
-        Input { value: no_panic::NoPanicSlice::new(bytes) }
+        Input { value: no_panic::Slice::new(bytes) }
     }
 
     /// Returns `true` if the input is empty and false otherwise.
@@ -197,7 +197,7 @@ pub fn read_all_optional<'a, F, R, E>(input: Option<Input<'a>>,
 /// digests over parsed data.
 #[derive(Debug)]
 pub struct Reader<'a> {
-    input: no_panic::NoPanicSlice<'a>,
+    input: no_panic::Slice<'a>,
     i: usize
 }
 
@@ -297,14 +297,14 @@ mod no_panic {
 
 /// A wrapper around a slice that exposes no functions that can panic.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct NoPanicSlice<'a> {
+pub struct Slice<'a> {
     bytes: &'a [u8]
 }
 
-impl<'a> NoPanicSlice<'a> {
+impl<'a> Slice<'a> {
     #[inline]
-    pub fn new(bytes: &'a [u8]) -> NoPanicSlice<'a> {
-        NoPanicSlice { bytes: bytes }
+    pub fn new(bytes: &'a [u8]) -> Slice<'a> {
+        Slice { bytes: bytes }
     }
 
     #[inline]
@@ -314,9 +314,9 @@ impl<'a> NoPanicSlice<'a> {
     pub fn len(&self) -> usize { self.bytes.len() }
 
     #[inline]
-    pub fn subslice(&self, start: usize, end: usize) -> Option<NoPanicSlice<'a>> {
+    pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
         if start <= end && end <= self.bytes.len() {
-            Some(NoPanicSlice::new(&self.bytes[start..end]))
+            Some(Slice::new(&self.bytes[start..end]))
         } else {
             None
         }
