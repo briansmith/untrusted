@@ -220,6 +220,10 @@ impl<'a> Reader<'a> {
         Reader { input: input.value, i: 0 }
     }
 
+    /// Returns the position in the input.
+    #[inline]
+    pub fn pos(&self) -> usize { self.i }
+
     /// Returns `true` if the reader is at the end of the input, and `false`
     /// otherwise.
     #[inline]
