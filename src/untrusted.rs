@@ -299,42 +299,41 @@ impl<'a> Reader<'a> {
 pub struct EndOfInput;
 
 mod no_panic {
-
-/// A wrapper around a slice that exposes no functions that can panic.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Slice<'a> {
-    bytes: &'a [u8]
-}
-
-impl<'a> Slice<'a> {
-    #[inline]
-    pub fn new(bytes: &'a [u8]) -> Slice<'a> {
-        Slice { bytes: bytes }
+    /// A wrapper around a slice that exposes no functions that can panic.
+    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
+    pub struct Slice<'a> {
+        bytes: &'a [u8]
     }
 
-    #[inline]
-    pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
-
-    #[inline]
-    pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
-        self.bytes.into_iter()
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize { self.bytes.len() }
-
-    #[inline]
-    pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
-        if start <= end && end <= self.bytes.len() {
-            Some(Slice::new(&self.bytes[start..end]))
-        } else {
-            None
+    impl<'a> Slice<'a> {
+        #[inline]
+        pub fn new(bytes: &'a [u8]) -> Slice<'a> {
+            Slice { bytes: bytes }
         }
-    }
 
-    #[inline]
-    pub fn as_slice_less_safe(&self) -> &'a [u8] { self.bytes }
-}
+        #[inline]
+        pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
+
+        #[inline]
+        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
+            self.bytes.into_iter()
+        }
+
+        #[inline]
+        pub fn len(&self) -> usize { self.bytes.len() }
+
+        #[inline]
+        pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
+            if start <= end && end <= self.bytes.len() {
+                Some(Slice::new(&self.bytes[start..end]))
+            } else {
+                None
+            }
+        }
+
+        #[inline]
+        pub fn as_slice_less_safe(&self) -> &'a [u8] { self.bytes }
+    }
 
 } // mod no_panic
 
