@@ -312,7 +312,17 @@ mod no_panic {
         }
 
         #[inline]
+        // TODO: https://github.com/rust-lang/rust/issues/35729#issuecomment-280872145
+        //      pub fn get<I>(&self, i: I) -> Option<&I::Output>
+        //          where I: core::slice::SliceIndex<u8>
         pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
+
+        // TODO: This will be replaced with `get()` once `get()` is made
+        // generic over `SliceIndex`.
+        #[inline]
+        pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
+            self.bytes.get(start..end).map(|bytes| Slice { bytes: bytes })
+        }
 
         #[inline]
         pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
@@ -321,15 +331,6 @@ mod no_panic {
 
         #[inline]
         pub fn len(&self) -> usize { self.bytes.len() }
-
-        #[inline]
-        pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
-            if start <= end && end <= self.bytes.len() {
-                Some(Slice::new(&self.bytes[start..end]))
-            } else {
-                None
-            }
-        }
 
         #[inline]
         pub fn as_slice_less_safe(&self) -> &'a [u8] { self.bytes }
