@@ -109,12 +109,12 @@ impl<'a> Input<'a> {
 
     /// Returns `true` if the input is empty and false otherwise.
     #[inline]
-    pub fn is_empty(&self) -> bool { self.value.len() == 0 }
+    pub fn is_empty(&self) -> bool { self.value.is_empty() }
 
     /// Returns an iterator over the input.
     #[inline]
     pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter {
-        self.value.iter()
+        self.value.into_iter()
     }
 
     /// Returns the length of the `Input`.
@@ -230,7 +230,7 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn get_input_between_marks(&self, mark1: Mark, mark2: Mark)
                                    -> Result<Input<'a>, EndOfInput> {
-        self.input.subslice(mark1.i, mark2.i)
+        self.input.get_slice(mark1.i..mark2.i)
                   .map(|subslice| Input { value: subslice })
                   .ok_or(EndOfInput)
     }
@@ -278,7 +278,7 @@ impl<'a> Reader<'a> {
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
                               -> Result<Input<'a>, EndOfInput> {
         let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
-        let ret = self.input.subslice(self.i, new_i)
+        let ret = self.input.get_slice(self.i..new_i)
                             .map(|subslice| Input { value: subslice })
                             .ok_or(EndOfInput);
         self.i = new_i;
@@ -299,6 +299,8 @@ impl<'a> Reader<'a> {
 pub struct EndOfInput;
 
 mod no_panic {
+    use core;
+
     /// A wrapper around a slice that exposes no functions that can panic.
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct Slice<'a> {
@@ -320,14 +322,18 @@ mod no_panic {
         // TODO: This will be replaced with `get()` once `get()` is made
         // generic over `SliceIndex`.
         #[inline]
-        pub fn subslice(&self, start: usize, end: usize) -> Option<Slice<'a>> {
-            self.bytes.get(start..end).map(|bytes| Slice { bytes: bytes })
+        pub fn get_slice(&self, r: core::ops::Range<usize>)
+                         -> Option<Slice<'a>> {
+            self.bytes.get(r).map(|bytes| Slice { bytes: bytes })
         }
 
         #[inline]
-        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
+        pub fn into_iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
             self.bytes.into_iter()
         }
+
+        #[inline]
+        pub fn is_empty(&self) -> bool { self.bytes.is_empty() }
 
         #[inline]
         pub fn len(&self) -> usize { self.bytes.len() }
