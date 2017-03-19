@@ -5,10 +5,10 @@ matrix:
     - rust: nightly
   include:
     - rust: stable
-    
+
     - rust: beta
 
     - rust: nightly
-      
+
 script:
   - cargo test
