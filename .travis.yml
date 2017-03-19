@@ -11,4 +11,5 @@ matrix:
     - rust: nightly
 
 script:
-  - cargo test
+  - cargo test -vv --release
+  - cargo test -vv
