@@ -310,7 +310,7 @@ mod no_panic {
     impl<'a> Slice<'a> {
         #[inline]
         pub fn new(bytes: &'a [u8]) -> Slice<'a> {
-            Slice { bytes: bytes }
+            Slice { bytes }
         }
 
         #[inline]
@@ -324,7 +324,7 @@ mod no_panic {
         #[inline]
         pub fn get_slice(&self, r: core::ops::Range<usize>)
                          -> Option<Slice<'a>> {
-            self.bytes.get(r).map(|bytes| Slice { bytes: bytes })
+            self.bytes.get(r).map(|bytes| Slice { bytes })
         }
 
         #[inline]
