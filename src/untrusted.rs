@@ -85,6 +85,33 @@
 
 #![doc(html_root_url="https://briansmith.org/rustdoc/")]
 
+#![allow(
+    missing_copy_implementations,
+    missing_debug_implementations,
+)]
+
+// `#[derive(...)]` uses `#[allow(unused_qualifications)]` internally.
+#![deny(
+    unused_qualifications,
+)]
+
+#![forbid(
+    anonymous_parameters,
+    box_pointers,
+    fat_ptr_transmutes,
+    legacy_directory_ownership,
+    missing_docs,
+    trivial_casts,
+    trivial_numeric_casts,
+    unsafe_code,
+    unstable_features,
+    unused_extern_crates,
+    unused_import_braces,
+    unused_results,
+    variant_size_differences,
+    warnings,
+)]
+
 #![no_std]
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
