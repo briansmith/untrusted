@@ -117,7 +117,7 @@
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
 ///
 /// No methods of `Input` will ever panic.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq)]
 pub struct Input<'a> {
     value: no_panic::Slice<'a>
 }
@@ -185,8 +185,18 @@ impl<'a> Input<'a> {
     }
 }
 
+// #[derive(PartialEq)] would result in lifetime bounds that are
+// unnecessarily restrictive; see
+// https://github.com/rust-lang/rust/issues/27950.
+impl<'a, 'b> PartialEq<Input<'b>> for Input<'a> {
+    fn eq(&self, other: &Input<'b>) -> bool {
+        self.as_slice_less_safe() == other.as_slice_less_safe()
+    }
+}
+
+// https://github.com/rust-lang/rust/issues/27950
 impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
-    fn eq(&self, other: &&'b [u8]) -> bool {
+    fn eq(&self, other: &&[u8]) -> bool {
         self.as_slice_less_safe() == *other
     }
 }
