@@ -189,6 +189,7 @@ impl<'a> Input<'a> {
 // unnecessarily restrictive; see
 // https://github.com/rust-lang/rust/issues/27950.
 impl<'a, 'b> PartialEq<Input<'b>> for Input<'a> {
+    #[inline]
     fn eq(&self, other: &Input<'b>) -> bool {
         self.as_slice_less_safe() == other.as_slice_less_safe()
     }
@@ -196,6 +197,7 @@ impl<'a, 'b> PartialEq<Input<'b>> for Input<'a> {
 
 // https://github.com/rust-lang/rust/issues/27950
 impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
+    #[inline]
     fn eq(&self, other: &&[u8]) -> bool {
         self.as_slice_less_safe() == *other
     }
