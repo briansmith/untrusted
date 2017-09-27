@@ -304,6 +304,17 @@ impl<'a> Reader<'a> {
         }
     }
 
+    /// Read as many bytes as needed to deserialize a type.
+    ///
+    /// Returns `Ok(b)` where `b` is the value of requested type or
+    /// `Err(EndOfInput)` if the `Reader` is at the end of the input.
+    pub fn read<T: FromReader>(&mut self) -> Result<T, EndOfInput> {
+        match self.endianess {
+            Endian::Big => FromReader::read_be(self),
+            Endian::Little => FromReader::read_le(self),
+        }
+    }
+
     /// Skips `num_bytes` of the input, returning the skipped input as an
     /// `Input`.
     ///
@@ -372,6 +383,75 @@ enum Endian {
 /// operation could be completed.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EndOfInput;
+
+/// A trait to abstract the idea of creating a new instance of a type from
+/// reading bytes out from `Reader`. Use `Reader::read::<T>()` to take advantage
+/// of this.
+pub trait FromReader: Sized {
+    /// Read as many bytes as needed to instantiate a type in Big Endian byte
+    /// order.
+    fn read_be(_: &mut Reader) -> Result<Self, EndOfInput>;
+
+    /// Read as many bytes as needed to instantiate a type in Little Endian byte
+    /// order.
+    fn read_le(_: &mut Reader) -> Result<Self, EndOfInput>;
+}
+
+macro_rules! read_unsigned {
+    () => {
+        fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
+            let s = core::mem::size_of::<Self>();
+            let slice = try!(reader.skip_and_get_input(s)).as_slice_less_safe();
+            let shift = (0..).map(|v| 8*v);
+            Ok(slice.iter().rev().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
+        }
+
+        fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
+            let s = core::mem::size_of::<Self>();
+            let slice = try!(reader.skip_and_get_input(s)).as_slice_less_safe();
+            let shift = (0..).map(|v| 8*v);
+            Ok(slice.iter().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
+        }
+    }
+}
+
+macro_rules! read_signed {
+    ($type:ty) => {
+        #[inline]
+        fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
+            let r = try!(reader.read::<$type>());
+            Ok(r as Self)
+        }
+
+        #[inline]
+        fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
+            let r = try!(reader.read::<$type>());
+            Ok(r as Self)
+        }
+    }
+}
+
+
+impl FromReader for u8 {
+    #[inline]
+    fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
+        reader.read_byte()
+    }
+
+    #[inline]
+    fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
+        reader.read_byte()
+    }
+}
+
+impl FromReader for u16 { read_unsigned!(); }
+impl FromReader for u32 { read_unsigned!(); }
+impl FromReader for u64 { read_unsigned!(); }
+
+impl FromReader for i8 { read_signed!(u8); }
+impl FromReader for i16 { read_signed!(u16); }
+impl FromReader for i32 { read_signed!(u32); }
+impl FromReader for i64 { read_signed!(u64); }
 
 mod no_panic {
     use core;
