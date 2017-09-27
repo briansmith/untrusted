@@ -109,11 +109,21 @@
 #[derive(Clone, Copy, Debug, Eq)]
 pub struct Input<'a> {
     value: no_panic::Slice<'a>,
+    endianess: Endian,
 }
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
+    ///
+    /// This assumes given input data is in Big Endian byte order. Use
+    /// `from_le()` to construct `Input` with Little Endian byte order.
     pub const fn from(bytes: &'a [u8]) -> Self {
+        Self::from_be(bytes)
+    }
+
+    /// Construct a new `Input` for the given input `bytes` in Big Endian byte
+    /// order.
+    pub const fn from_be(bytes: &'a [u8]) -> Input<'a> {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
         // not return `None`. According to the Rust language reference, the
@@ -121,6 +131,16 @@ impl<'a> Input<'a> {
         // impossible to create an object of size `core::usize::MAX` or larger.
         Self {
             value: no_panic::Slice::new(bytes),
+            endianess: Endian::Big,
+        }
+    }
+
+    /// Construct a new `Input` for the given input `bytes` in Little Endian
+    /// byte order.
+    pub const fn from_le(bytes: &'a [u8]) -> Input<'a> {
+        Input {
+            value: no_panic::Slice::new(bytes),
+            endianess: Endian::Little,
         }
     }
 
@@ -217,6 +237,7 @@ where
 pub struct Reader<'a> {
     input: no_panic::Slice<'a>,
     i: usize,
+    endianess: Endian,
 }
 
 /// An index into the already-parsed input of a `Reader`.
@@ -232,6 +253,7 @@ impl<'a> Reader<'a> {
         Self {
             input: input.value,
             i: 0,
+            endianess: input.endianess
         }
     }
 
@@ -248,7 +270,7 @@ impl<'a> Reader<'a> {
     ) -> Result<Input<'a>, EndOfInput> {
         self.input
             .subslice(mark1.i..mark2.i)
-            .map(|subslice| Input { value: subslice })
+            .map(|subslice| Input { value: subslice, endianess: self.endianess })
             .ok_or(EndOfInput)
     }
 
@@ -293,7 +315,7 @@ impl<'a> Reader<'a> {
         let ret = self
             .input
             .subslice(self.i..new_i)
-            .map(|subslice| Input { value: subslice })
+            .map(|subslice| Input { value: subslice, endianess: self.endianess })
             .ok_or(EndOfInput)?;
         self.i = new_i;
         Ok(ret)
@@ -317,7 +339,8 @@ impl<'a> Reader<'a> {
         let start = self.i;
         let r = read(self)?;
         let bytes_read = Input {
-            value: self.input.subslice(start..self.i).unwrap()
+            value: self.input.subslice(start..self.i).unwrap(),
+            endianess: self.endianess,
         };
         Ok((bytes_read, r))
     }
@@ -334,6 +357,15 @@ impl<'a> Reader<'a> {
     /// Skips the reader to the end of the input.
     #[inline]
     pub fn skip_to_end(&mut self) -> () { let _ = self.read_bytes_to_end(); }
+}
+
+/// Endianess (byte order) of the input data.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Endian {
+    /// Big Endian. Most significant byte is first.
+    Big,
+    /// Little Endian. Least significant byte is first.
+    Little,
 }
 
 /// The error type used to indicate the end of the input was reached before the
