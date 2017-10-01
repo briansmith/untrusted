@@ -207,11 +207,11 @@ impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
 /// called with `None`.
-pub fn read_all_optional<'a, F, R, E>(input: Option<Input<'a>>,
-                                      incomplete_read: E, read: F)
-                                      -> Result<R, E>
-                                      where F: FnOnce(Option<&mut Reader>)
-                                                      -> Result<R, E> {
+pub fn read_all_optional<F, R, E>(input: Option<Input>,
+                                  incomplete_read: E, read: F)
+                                  -> Result<R, E>
+                                  where F: FnOnce(Option<&mut Reader>)
+                                                  -> Result<R, E> {
     match input {
         Some(input) => {
             let mut input = Reader::new(input);
@@ -283,7 +283,7 @@ impl<'a> Reader<'a> {
     /// byte is equal to `b`, and false otherwise.
     pub fn peek(&self, b: u8) -> bool {
         match self.input.get(self.i) {
-            Some(actual_b) => return b == *actual_b,
+            Some(actual_b) => b == *actual_b,
             None => false
         }
     }

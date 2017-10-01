@@ -10,6 +10,7 @@ version = "0.6.0"
 
 [lib]
 name = "untrusted"
+path = "src/untrusted.rs"
 
 [profile.bench]
 opt-level = 3
