@@ -141,7 +141,7 @@ impl<'a> Input<'a> {
     /// Returns an iterator over the input.
     #[inline]
     pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter {
-        self.value.into_iter()
+        self.value.iter()
     }
 
     /// Returns the length of the `Input`.
@@ -367,7 +367,7 @@ mod no_panic {
         }
 
         #[inline]
-        pub fn into_iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
+        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
             self.bytes.into_iter()
         }
 
@@ -435,5 +435,16 @@ mod tests {
         let slice = b"foo";
         let input = Input::from(slice);
         assert_eq!(input.as_slice_less_safe(), slice);
+    }
+
+    #[test]
+    fn test_input_as_iterator() {
+        let slice = b"foo";
+        let input = Input::from(slice);
+        let mut iter = input.iter();
+        assert_eq!(Some(&b'f'), iter.next());
+        assert_eq!(Some(&b'o'), iter.next());
+        assert_eq!(Some(&b'o'), iter.next());
+        assert_eq!(None, iter.next());
     }
 }
