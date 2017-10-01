@@ -14,17 +14,5 @@ name = "untrusted"
 path = "src/untrusted.rs"
 
 [profile.bench]
-opt-level = 3
-debug = true
-rpath = false
+opt-level = 2
 lto = true
-debug-assertions = false
-codegen-units = 1
-
-[profile.release]
-opt-level = 3
-debug = true
-rpath = false
-lto = true
-debug-assertions = false
-codegen-units = 1
