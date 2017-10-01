@@ -2,7 +2,7 @@
 authors = ["Brian Smith <brian@briansmith.org>"]
 description = "Safe, fast, zero-panic, zero-crashing, zero-allocation parsing of untrusted inputs in Rust."
 documentation = "https://briansmith.org/rustdoc/untrusted/"
-license-file = "LICENSE.txt"
+license = "ISC"
 name = "untrusted"
 readme = "README.md"
 repository = "https://github.com/briansmith/untrusted"
