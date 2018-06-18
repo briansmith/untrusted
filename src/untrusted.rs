@@ -245,6 +245,7 @@ pub struct Reader<'a> {
 }
 
 /// An index into the already-parsed input of a `Reader`.
+#[derive(Clone, Copy)]
 pub struct Mark {
     i: usize
 }
