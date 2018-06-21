@@ -316,11 +316,11 @@ impl<'a> Reader<'a> {
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
                               -> Result<Input<'a>, EndOfInput> {
         let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
-        let ret = self.input.get_slice(self.i..new_i)
-                            .map(|subslice| Input { value: subslice })
-                            .ok_or(EndOfInput);
+        let ret = try!(self.input.get_slice(self.i..new_i)
+                                 .map(|subslice| Input { value: subslice })
+                                 .ok_or(EndOfInput));
         self.i = new_i;
-        ret
+        Ok(ret)
     }
 
     /// Skips the reader to the end of the input, returning the skipped input
