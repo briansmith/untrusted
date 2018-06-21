@@ -326,7 +326,7 @@ impl<'a> Reader<'a> {
     /// Skips the reader to the end of the input, returning the skipped input
     /// as an `Input`.
     pub fn skip_to_end(&mut self) -> Input<'a> {
-        let to_skip = self.input.len() - self.i;
+        let to_skip = self.input.len().checked_sub(self.i).unwrap_or(0);
         self.skip_and_get_input(to_skip).unwrap()
     }
 }
