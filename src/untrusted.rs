@@ -446,4 +446,15 @@ mod tests {
         assert_eq!(Some(&b'o'), iter.next());
         assert_eq!(None, iter.next());
     }
+
+    #[test]
+    fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
+        let input = Input::from(&[]);
+        let r = input.read_all(EndOfInput, |input| {
+            let r = input.skip_and_get_input(1);
+            assert_eq!(r, Err(EndOfInput));
+            Ok(input.skip_to_end())
+        });
+        let _ = r; // "Use" r. The value of `r` is undefined here.
+    }
 }
