@@ -268,6 +268,7 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn get_input_between_marks(&self, mark1: Mark, mark2: Mark)
                                    -> Result<Input<'a>, EndOfInput> {
+        debug_assert!(self.i <= self.input.len());
         self.input.get_slice(mark1.i..mark2.i)
                   .map(|subslice| Input { value: subslice })
                   .ok_or(EndOfInput)
@@ -281,6 +282,7 @@ impl<'a> Reader<'a> {
     /// Returns `true` if there is at least one more byte in the input and that
     /// byte is equal to `b`, and false otherwise.
     pub fn peek(&self, b: u8) -> bool {
+        debug_assert!(self.i <= self.input.len());
         match self.input.get(self.i) {
             Some(actual_b) => b == *actual_b,
             None => false
@@ -292,6 +294,7 @@ impl<'a> Reader<'a> {
     /// Returns `Ok(b)` where `b` is the next input byte, or `Err(EndOfInput)`
     /// if the `Reader` is at the end of the input.
     pub fn read_byte(&mut self) -> Result<u8, EndOfInput> {
+        debug_assert!(self.i <= self.input.len());
         match self.input.get(self.i) {
             Some(b) => {
                 self.i += 1; // safe from overflow; see Input::from().
@@ -306,6 +309,7 @@ impl<'a> Reader<'a> {
     /// Returns `Ok(())` if there are at least `num_bytes` of input remaining,
     /// and `Err(EndOfInput)` otherwise.
     pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
+        debug_assert!(self.i <= self.input.len());
         self.skip_and_get_input(num_bytes).map(|_| ())
     }
 
@@ -315,17 +319,20 @@ impl<'a> Reader<'a> {
     /// `num_bytes` of input remaining, and `Err(EndOfInput)` otherwise.
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
                               -> Result<Input<'a>, EndOfInput> {
+        debug_assert!(self.i <= self.input.len());
         let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
         let ret = try!(self.input.get_slice(self.i..new_i)
                                  .map(|subslice| Input { value: subslice })
                                  .ok_or(EndOfInput));
         self.i = new_i;
+        debug_assert!(self.i <= self.input.len());
         Ok(ret)
     }
 
     /// Skips the reader to the end of the input, returning the skipped input
     /// as an `Input`.
     pub fn skip_to_end(&mut self) -> Input<'a> {
+        debug_assert!(self.i <= self.input.len());
         let to_skip = self.input.len() - self.i;
         self.skip_and_get_input(to_skip).unwrap()
     }
