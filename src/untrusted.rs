@@ -268,7 +268,7 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn get_input_between_marks(&self, mark1: Mark, mark2: Mark)
                                    -> Result<Input<'a>, EndOfInput> {
-        self.input.get_slice(mark1.i..mark2.i)
+        self.input.subslice(mark1.i..mark2.i)
                   .map(|subslice| Input { value: subslice })
                   .ok_or(EndOfInput)
     }
@@ -316,7 +316,7 @@ impl<'a> Reader<'a> {
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
                               -> Result<Input<'a>, EndOfInput> {
         let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
-        let ret = try!(self.input.get_slice(self.i..new_i)
+        let ret = try!(self.input.subslice(self.i..new_i)
                                  .map(|subslice| Input { value: subslice })
                                  .ok_or(EndOfInput));
         self.i = new_i;
@@ -352,16 +352,11 @@ mod no_panic {
         }
 
         #[inline]
-        // TODO: https://github.com/rust-lang/rust/issues/35729#issuecomment-280872145
-        //      pub fn get<I>(&self, i: I) -> Option<&I::Output>
-        //          where I: core::slice::SliceIndex<u8>
         pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
 
-        // TODO: This will be replaced with `get()` once `get()` is made
-        // generic over `SliceIndex`.
         #[inline]
-        pub fn get_slice(&self, r: core::ops::Range<usize>)
-                         -> Option<Slice<'a>> {
+        pub fn subslice(&self, r: core::ops::Range<usize>)
+                        -> Option<Slice<'a>> {
             self.bytes.get(r).map(|bytes| Slice { bytes })
         }
 
