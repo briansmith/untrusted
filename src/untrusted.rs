@@ -154,7 +154,7 @@ impl<'a> Input<'a> {
                              -> Result<R, E>
                              where F: FnOnce(&mut Reader<'a>) -> Result<R, E> {
         let mut input = Reader::new(*self);
-        let result = try!(read(&mut input));
+        let result = read(&mut input)?;
         if input.at_end() {
             Ok(result)
         } else {
@@ -168,7 +168,7 @@ impl<'a> Input<'a> {
                                  where F: FnMut(&mut Reader<'a>)
                                                 -> Result<R, E> {
         let mut input = Reader::new(*self);
-        let result = try!(read(&mut input));
+        let result = read(&mut input)?;
         if input.at_end() {
             Ok(result)
         } else {
@@ -214,7 +214,7 @@ pub fn read_all_optional<F, R, E>(input: Option<Input>,
     match input {
         Some(input) => {
             let mut input = Reader::new(input);
-            let result = try!(read(Some(&mut input)));
+            let result = read(Some(&mut input))?;
             if input.at_end() {
                 Ok(result)
             } else {
@@ -315,10 +315,10 @@ impl<'a> Reader<'a> {
     /// `num_bytes` of input remaining, and `Err(EndOfInput)` otherwise.
     pub fn skip_and_get_input(&mut self, num_bytes: usize)
                               -> Result<Input<'a>, EndOfInput> {
-        let new_i = try!(self.i.checked_add(num_bytes).ok_or(EndOfInput));
-        let ret = try!(self.input.subslice(self.i..new_i)
-                                 .map(|subslice| Input { value: subslice })
-                                 .ok_or(EndOfInput));
+        let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
+        let ret = self.input.subslice(self.i..new_i)
+            .map(|subslice| Input { value: subslice })
+            .ok_or(EndOfInput)?;
         self.i = new_i;
         Ok(ret)
     }
@@ -404,9 +404,9 @@ mod tests {
     fn test_input_read_all() {
         let input = Input::from(b"foo");
         let result = input.read_all(EndOfInput, |input| {
-            assert_eq!(b'f', try!(input.read_byte()));
-            assert_eq!(b'o', try!(input.read_byte()));
-            assert_eq!(b'o', try!(input.read_byte()));
+            assert_eq!(b'f', input.read_byte()?);
+            assert_eq!(b'o', input.read_byte()?);
+            assert_eq!(b'o', input.read_byte()?);
             assert!(input.at_end());
             Ok(())
         });
@@ -417,7 +417,7 @@ mod tests {
     fn test_input_read_all_unconsume() {
         let input = Input::from(b"foo");
         let result = input.read_all(EndOfInput, |input| {
-            assert_eq!(b'f', try!(input.read_byte()));
+            assert_eq!(b'f', input.read_byte()?);
             assert!(!input.at_end());
             Ok(())
         });
