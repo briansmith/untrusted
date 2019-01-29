@@ -162,20 +162,6 @@ impl<'a> Input<'a> {
         }
     }
 
-    /// Like `read_all`, except taking an `FnMut`.
-    pub fn read_all_mut<F, R, E>(&self, incomplete_read: E, mut read: F)
-                                 -> Result<R, E>
-                                 where F: FnMut(&mut Reader<'a>)
-                                                -> Result<R, E> {
-        let mut input = Reader::new(*self);
-        let result = read(&mut input)?;
-        if input.at_end() {
-            Ok(result)
-        } else {
-            Err(incomplete_read)
-        }
-    }
-
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
     #[inline]
@@ -230,10 +216,9 @@ pub fn read_all_optional<F, R, E>(input: Option<Input>,
 ///
 /// Using `Reader` to parse input helps to ensure that no byte of the input
 /// will be accidentally processed more than once. Using `Reader` in
-/// conjunction with `read_all`, `read_all_mut`, and `read_all_optional`
-/// helps ensure that no byte of the input is accidentally left unprocessed.
-/// The methods of `Reader` never panic, so `Reader` also assists the writing
-/// of panic-free code.
+/// conjunction with `read_all` and `read_all_optional` helps ensure that no
+/// byte of the input is accidentally left unprocessed. The methods of `Reader`
+/// never panic, so `Reader` also assists the writing of panic-free code.
 ///
 /// \* `Reader` is not strictly forward-only because of the method
 /// `get_input_between_marks`, which is provided mainly to support calculating
@@ -250,9 +235,8 @@ pub struct Mark {
 }
 
 impl<'a> Reader<'a> {
-    /// Construct a new Reader for the given input. Use `read_all`,
-    /// `read_all_mut`, or `read_all_optional` instead of `Reader::new`
-    /// whenever possible.
+    /// Construct a new Reader for the given input. Use `read_all` or
+    /// `read_all_optional` instead of `Reader::new` whenever possible.
     #[inline]
     pub fn new(input: Input<'a>) -> Reader<'a> {
         Reader { input: input.value, i: 0 }
