@@ -83,18 +83,10 @@
 //! All of [webpki](https://github.com/briansmith/webpki)'s parsing of X.509
 //! certificates (also ASN.1 DER) is done using untrusted.rs.
 
-#![doc(html_root_url="https://briansmith.org/rustdoc/")]
-
-#![allow(
-    missing_copy_implementations,
-    missing_debug_implementations,
-)]
-
+#![doc(html_root_url = "https://briansmith.org/rustdoc/")]
+#![allow(missing_copy_implementations, missing_debug_implementations)]
 // `#[derive(...)]` uses `#[allow(unused_qualifications)]` internally.
-#![deny(
-    unused_qualifications,
-)]
-
+#![deny(unused_qualifications)]
 #![forbid(
     anonymous_parameters,
     box_pointers,
@@ -108,9 +100,8 @@
     unused_import_braces,
     unused_results,
     variant_size_differences,
-    warnings,
+    warnings
 )]
-
 #![no_std]
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
@@ -118,7 +109,7 @@
 /// No methods of `Input` will ever panic.
 #[derive(Clone, Copy, Debug, Eq)]
 pub struct Input<'a> {
-    value: no_panic::Slice<'a>
+    value: no_panic::Slice<'a>,
 }
 
 impl<'a> Input<'a> {
@@ -130,7 +121,9 @@ impl<'a> Input<'a> {
         // maximum object size is `core::isize::MAX`, and in practice it is
         // impossible to create an object of size `core::usize::MAX` or larger.
         debug_assert!(bytes.len() < core::usize::MAX);
-        Input { value: no_panic::Slice::new(bytes) }
+        Input {
+            value: no_panic::Slice::new(bytes),
+        }
     }
 
     /// Returns `true` if the input is empty and false otherwise.
@@ -139,9 +132,7 @@ impl<'a> Input<'a> {
 
     /// Returns an iterator over the input.
     #[inline]
-    pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter {
-        self.value.iter()
-    }
+    pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter { self.value.iter() }
 
     /// Returns the length of the `Input`.
     #[inline]
@@ -150,9 +141,10 @@ impl<'a> Input<'a> {
     /// Calls `read` with the given input as a `Reader`, ensuring that `read`
     /// consumed the entire input. If `read` does not consume the entire input,
     /// `incomplete_read` is returned.
-    pub fn read_all<F, R, E>(&self, incomplete_read: E, read: F)
-                             -> Result<R, E>
-                             where F: FnOnce(&mut Reader<'a>) -> Result<R, E> {
+    pub fn read_all<F, R, E>(&self, incomplete_read: E, read: F) -> Result<R, E>
+    where
+        F: FnOnce(&mut Reader<'a>) -> Result<R, E>,
+    {
         let mut input = Reader::new(*self);
         let result = read(&mut input)?;
         if input.at_end() {
@@ -165,9 +157,7 @@ impl<'a> Input<'a> {
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
     #[inline]
-    pub fn as_slice_less_safe(&self) -> &'a [u8] {
-        self.value.as_slice_less_safe()
-    }
+    pub fn as_slice_less_safe(&self) -> &'a [u8] { self.value.as_slice_less_safe() }
 }
 
 // #[derive(PartialEq)] would result in lifetime bounds that are
@@ -181,22 +171,18 @@ impl<'a, 'b> PartialEq<Input<'b>> for Input<'a> {
 }
 
 // https://github.com/rust-lang/rust/issues/27950
-impl <'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
+impl<'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
     #[inline]
-    fn eq(&self, other: &&[u8]) -> bool {
-        self.as_slice_less_safe() == *other
-    }
+    fn eq(&self, other: &&[u8]) -> bool { self.as_slice_less_safe() == *other }
 }
-
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
 /// called with `None`.
-pub fn read_all_optional<F, R, E>(input: Option<Input>,
-                                  incomplete_read: E, read: F)
-                                  -> Result<R, E>
-                                  where F: FnOnce(Option<&mut Reader>)
-                                                  -> Result<R, E> {
+pub fn read_all_optional<F, R, E>(input: Option<Input>, incomplete_read: E, read: F) -> Result<R, E>
+where
+    F: FnOnce(Option<&mut Reader>) -> Result<R, E>,
+{
     match input {
         Some(input) => {
             let mut input = Reader::new(input);
@@ -207,10 +193,9 @@ pub fn read_all_optional<F, R, E>(input: Option<Input>,
                 Err(incomplete_read)
             }
         },
-        None => read(None)
+        None => read(None),
     }
 }
-
 
 /// A read-only, forward-only* cursor into the data in an `Input`.
 ///
@@ -226,12 +211,12 @@ pub fn read_all_optional<F, R, E>(input: Option<Input>,
 #[derive(Debug)]
 pub struct Reader<'a> {
     input: no_panic::Slice<'a>,
-    i: usize
+    i: usize,
 }
 
 /// An index into the already-parsed input of a `Reader`.
 pub struct Mark {
-    i: usize
+    i: usize,
 }
 
 impl<'a> Reader<'a> {
@@ -239,7 +224,10 @@ impl<'a> Reader<'a> {
     /// `read_all_optional` instead of `Reader::new` whenever possible.
     #[inline]
     pub fn new(input: Input<'a>) -> Reader<'a> {
-        Reader { input: input.value, i: 0 }
+        Reader {
+            input: input.value,
+            i: 0,
+        }
     }
 
     /// Returns `true` if the reader is at the end of the input, and `false`
@@ -250,11 +238,13 @@ impl<'a> Reader<'a> {
     /// Returns an `Input` for already-parsed input that has had its boundaries
     /// marked using `mark`.
     #[inline]
-    pub fn get_input_between_marks(&self, mark1: Mark, mark2: Mark)
-                                   -> Result<Input<'a>, EndOfInput> {
-        self.input.subslice(mark1.i..mark2.i)
-                  .map(|subslice| Input { value: subslice })
-                  .ok_or(EndOfInput)
+    pub fn get_input_between_marks(
+        &self, mark1: Mark, mark2: Mark,
+    ) -> Result<Input<'a>, EndOfInput> {
+        self.input
+            .subslice(mark1.i..mark2.i)
+            .map(|subslice| Input { value: subslice })
+            .ok_or(EndOfInput)
     }
 
     /// Return the current position of the `Reader` for future use in a call
@@ -267,7 +257,7 @@ impl<'a> Reader<'a> {
     pub fn peek(&self, b: u8) -> bool {
         match self.input.get(self.i) {
             Some(actual_b) => b == *actual_b,
-            None => false
+            None => false,
         }
     }
 
@@ -280,8 +270,8 @@ impl<'a> Reader<'a> {
             Some(b) => {
                 self.i += 1; // safe from overflow; see Input::from().
                 Ok(*b)
-            }
-            None => Err(EndOfInput)
+            },
+            None => Err(EndOfInput),
         }
     }
 
@@ -293,14 +283,16 @@ impl<'a> Reader<'a> {
         self.skip_and_get_input(num_bytes).map(|_| ())
     }
 
-    /// Skips `num_bytes` of the input, returning the skipped input as an `Input`.
+    /// Skips `num_bytes` of the input, returning the skipped input as an
+    /// `Input`.
     ///
     /// Returns `Ok(i)` where `i` is an `Input` if there are at least
     /// `num_bytes` of input remaining, and `Err(EndOfInput)` otherwise.
-    pub fn skip_and_get_input(&mut self, num_bytes: usize)
-                              -> Result<Input<'a>, EndOfInput> {
+    pub fn skip_and_get_input(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
         let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
-        let ret = self.input.subslice(self.i..new_i)
+        let ret = self
+            .input
+            .subslice(self.i..new_i)
             .map(|subslice| Input { value: subslice })
             .ok_or(EndOfInput)?;
         self.i = new_i;
@@ -326,28 +318,23 @@ mod no_panic {
     /// A wrapper around a slice that exposes no functions that can panic.
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct Slice<'a> {
-        bytes: &'a [u8]
+        bytes: &'a [u8],
     }
 
     impl<'a> Slice<'a> {
         #[inline]
-        pub fn new(bytes: &'a [u8]) -> Slice<'a> {
-            Slice { bytes }
-        }
+        pub fn new(bytes: &'a [u8]) -> Slice<'a> { Slice { bytes } }
 
         #[inline]
         pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
 
         #[inline]
-        pub fn subslice(&self, r: core::ops::Range<usize>)
-                        -> Option<Slice<'a>> {
+        pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Slice<'a>> {
             self.bytes.get(r).map(|bytes| Slice { bytes })
         }
 
         #[inline]
-        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter {
-            self.bytes.into_iter()
-        }
+        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter { self.bytes.into_iter() }
 
         #[inline]
         pub fn is_empty(&self) -> bool { self.bytes.is_empty() }
@@ -366,9 +353,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_input_from() {
-        let _ = Input::from(b"foo");
-    }
+    fn test_input_from() { let _ = Input::from(b"foo"); }
 
     #[test]
     fn test_input_is_empty() {
