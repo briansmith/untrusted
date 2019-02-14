@@ -1,0 +1,83 @@
+// Copyright 2015-2019 Brian Smith.
+//
+// Permission to use, copy, modify, and/or distribute this software for any
+// purpose with or without fee is hereby granted, provided that the above
+// copyright notice and this permission notice appear in all copies.
+//
+// THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHORS DISCLAIM ALL WARRANTIES
+// WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+// MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR
+// ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+// WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+// ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+// OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+#[test]
+fn test_input_from() { let _ = untrusted::Input::from(b"foo"); }
+
+#[test]
+fn test_input_is_empty() {
+    let input = untrusted::Input::from(b"");
+    assert!(input.is_empty());
+    let input = untrusted::Input::from(b"foo");
+    assert!(!input.is_empty());
+}
+
+#[test]
+fn test_input_len() {
+    let input = untrusted::Input::from(b"foo");
+    assert_eq!(input.len(), 3);
+}
+
+#[test]
+fn test_input_read_all() {
+    let input = untrusted::Input::from(b"foo");
+    let result = input.read_all(untrusted::EndOfInput, |input| {
+        assert_eq!(b'f', input.read_byte()?);
+        assert_eq!(b'o', input.read_byte()?);
+        assert_eq!(b'o', input.read_byte()?);
+        assert!(input.at_end());
+        Ok(())
+    });
+    assert_eq!(result, Ok(()));
+}
+
+#[test]
+fn test_input_read_all_unconsume() {
+    let input = untrusted::Input::from(b"foo");
+    let result = input.read_all(untrusted::EndOfInput, |input| {
+        assert_eq!(b'f', input.read_byte()?);
+        assert!(!input.at_end());
+        Ok(())
+    });
+    assert_eq!(result, Err(untrusted::EndOfInput));
+}
+
+#[test]
+fn test_input_as_slice_less_safe() {
+    let slice = b"foo";
+    let input = untrusted::Input::from(slice);
+    assert_eq!(input.as_slice_less_safe(), slice);
+}
+
+#[test]
+fn test_input_as_iterator() {
+    let slice = b"foo";
+    let input = untrusted::Input::from(slice);
+    let mut iter = input.iter();
+    assert_eq!(Some(&b'f'), iter.next());
+    assert_eq!(Some(&b'o'), iter.next());
+    assert_eq!(Some(&b'o'), iter.next());
+    assert_eq!(None, iter.next());
+}
+
+#[test]
+fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
+    let input = untrusted::Input::from(&[]);
+    let r = input.read_all(untrusted::EndOfInput, |input| {
+        let r = input.skip_and_get_input(1);
+        assert_eq!(r, Err(untrusted::EndOfInput));
+        Ok(input.skip_to_end())
+    });
+    let _ = r; // "Use" r. The value of `r` is undefined here.
+}
