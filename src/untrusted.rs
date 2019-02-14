@@ -113,14 +113,14 @@ pub struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
-    pub fn from(bytes: &'a [u8]) -> Input<'a> {
+    pub fn from(bytes: &'a [u8]) -> Self {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
         // not return `None`. According to the Rust language reference, the
         // maximum object size is `core::isize::MAX`, and in practice it is
         // impossible to create an object of size `core::usize::MAX` or larger.
         debug_assert!(bytes.len() < core::usize::MAX);
-        Input {
+        Self {
             value: no_panic::Slice::new(bytes),
         }
     }
@@ -222,8 +222,8 @@ impl<'a> Reader<'a> {
     /// Construct a new Reader for the given input. Use `read_all` or
     /// `read_all_optional` instead of `Reader::new` whenever possible.
     #[inline]
-    pub fn new(input: Input<'a>) -> Reader<'a> {
-        Reader {
+    pub fn new(input: Input<'a>) -> Self {
+        Self {
             input: input.value,
             i: 0,
         }
@@ -322,14 +322,14 @@ mod no_panic {
 
     impl<'a> Slice<'a> {
         #[inline]
-        pub fn new(bytes: &'a [u8]) -> Slice<'a> { Slice { bytes } }
+        pub fn new(bytes: &'a [u8]) -> Self { Self { bytes } }
 
         #[inline]
         pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
 
         #[inline]
-        pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Slice<'a>> {
-            self.bytes.get(r).map(|bytes| Slice { bytes })
+        pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Self> {
+            self.bytes.get(r).map(|bytes| Self { bytes })
         }
 
         #[inline]
