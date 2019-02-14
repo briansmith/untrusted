@@ -75,9 +75,9 @@ fn test_input_as_iterator() {
 fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
     let input = untrusted::Input::from(&[]);
     let r = input.read_all(untrusted::EndOfInput, |input| {
-        let r = input.skip_and_get_input(1);
+        let r = input.read_bytes(1);
         assert_eq!(r, Err(untrusted::EndOfInput));
-        Ok(input.skip_to_end())
+        Ok(input.read_bytes_to_end())
     });
     let _ = r; // "Use" r. The value of `r` is undefined here.
 }

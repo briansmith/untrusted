@@ -274,20 +274,12 @@ impl<'a> Reader<'a> {
         }
     }
 
-    /// Skips `num_bytes` of the input.
-    ///
-    /// Returns `Ok(())` if there are at least `num_bytes` of input remaining,
-    /// and `Err(EndOfInput)` otherwise.
-    pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
-        self.skip_and_get_input(num_bytes).map(|_| ())
-    }
-
     /// Skips `num_bytes` of the input, returning the skipped input as an
     /// `Input`.
     ///
-    /// Returns `Ok(i)` where `i` is an `Input` if there are at least
-    /// `num_bytes` of input remaining, and `Err(EndOfInput)` otherwise.
-    pub fn skip_and_get_input(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
+    /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
+    /// and `Err(EndOfInput)` otherwise.
+    pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
         let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
         let ret = self
             .input
@@ -300,10 +292,21 @@ impl<'a> Reader<'a> {
 
     /// Skips the reader to the end of the input, returning the skipped input
     /// as an `Input`.
-    pub fn skip_to_end(&mut self) -> Input<'a> {
+    pub fn read_bytes_to_end(&mut self) -> Input<'a> {
         let to_skip = self.input.len() - self.i;
-        self.skip_and_get_input(to_skip).unwrap()
+        self.read_bytes(to_skip).unwrap()
     }
+
+    /// Skips `num_bytes` of the input.
+    ///
+    /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
+    /// and `Err(EndOfInput)` otherwise.
+    pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
+        self.read_bytes(num_bytes).map(|_| ())
+    }
+
+    /// Skips the reader to the end of the input.
+    pub fn skip_to_end(&mut self) -> () { let _ = self.read_bytes_to_end(); }
 }
 
 /// The error type used to indicate the end of the input was reached before the
