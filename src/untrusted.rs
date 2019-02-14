@@ -334,7 +334,7 @@ mod no_panic {
         }
 
         #[inline]
-        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter { self.bytes.into_iter() }
+        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter { self.bytes.iter() }
 
         #[inline]
         pub fn is_empty(&self) -> bool { self.bytes.is_empty() }
