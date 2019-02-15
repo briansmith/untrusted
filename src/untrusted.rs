@@ -253,6 +253,7 @@ impl<'a> Reader<'a> {
 
     /// Returns `true` if there is at least one more byte in the input and that
     /// byte is equal to `b`, and false otherwise.
+    #[inline]
     pub fn peek(&self, b: u8) -> bool {
         match self.input.get(self.i) {
             Some(actual_b) => b == *actual_b,
@@ -264,6 +265,7 @@ impl<'a> Reader<'a> {
     ///
     /// Returns `Ok(b)` where `b` is the next input byte, or `Err(EndOfInput)`
     /// if the `Reader` is at the end of the input.
+    #[inline]
     pub fn read_byte(&mut self) -> Result<u8, EndOfInput> {
         match self.input.get(self.i) {
             Some(b) => {
@@ -279,6 +281,7 @@ impl<'a> Reader<'a> {
     ///
     /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
     /// and `Err(EndOfInput)` otherwise.
+    #[inline]
     pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
         let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
         let ret = self
@@ -292,6 +295,7 @@ impl<'a> Reader<'a> {
 
     /// Skips the reader to the end of the input, returning the skipped input
     /// as an `Input`.
+    #[inline]
     pub fn read_bytes_to_end(&mut self) -> Input<'a> {
         let to_skip = self.input.len() - self.i;
         self.read_bytes(to_skip).unwrap()
@@ -301,11 +305,13 @@ impl<'a> Reader<'a> {
     ///
     /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
     /// and `Err(EndOfInput)` otherwise.
+    #[inline]
     pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
         self.read_bytes(num_bytes).map(|_| ())
     }
 
     /// Skips the reader to the end of the input.
+    #[inline]
     pub fn skip_to_end(&mut self) -> () { let _ = self.read_bytes_to_end(); }
 }
 
