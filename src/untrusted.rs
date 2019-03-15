@@ -299,6 +299,21 @@ impl<'a> Reader<'a> {
         self.read_bytes(to_skip).unwrap()
     }
 
+    /// Calls `read()` with the given input as a `Reader`. On success, returns a
+    /// pair `(bytes_read, r)` where `bytes_read` is what `read()` consumed and
+    /// `r` is `read()`'s return value.
+    pub fn read_partial<F, R, E>(&mut self, read: F) -> Result<(Input<'a>, R), E>
+    where
+        F: FnOnce(&mut Reader<'a>) -> Result<R, E>,
+    {
+        let start = self.i;
+        let r = read(self)?;
+        let bytes_read = Input {
+            value: self.input.subslice(start..self.i).unwrap()
+        };
+        Ok((bytes_read, r))
+    }
+
     /// Skips `num_bytes` of the input.
     ///
     /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
