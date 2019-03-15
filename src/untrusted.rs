@@ -209,37 +209,28 @@ where
 /// byte of the input is accidentally left unprocessed. The methods of `Reader`
 /// never panic, so `Reader` also assists the writing of panic-free code.
 #[derive(Debug)]
-pub struct Reader<'a> {
-    input: no_panic::Slice<'a>,
-    i: usize,
-}
+pub struct Reader<'a>(no_panic::Slice<'a>);
 
 impl<'a> Reader<'a> {
     /// Construct a new Reader for the given input. Use `read_all` or
     /// `read_all_optional` instead of `Reader::new` whenever possible.
     #[inline]
     pub fn new(input: Input<'a>) -> Self {
-        Self {
-            input: input.value,
-            i: 0,
-        }
+        Self(input.value)
     }
 
     /// Returns `true` if the reader is at the end of the input, and `false`
     /// otherwise.
     #[inline]
     pub fn at_end(&self) -> bool {
-        self.i == self.input.len()
+        self.0.is_empty()
     }
 
     /// Returns `true` if there is at least one more byte in the input and that
     /// byte is equal to `b`, and false otherwise.
     #[inline]
     pub fn peek(&self, b: u8) -> bool {
-        match self.input.get(self.i) {
-            Some(actual_b) => b == *actual_b,
-            None => false,
-        }
+        self.0.first() == Some(b)
     }
 
     /// Reads the next input byte.
@@ -248,13 +239,9 @@ impl<'a> Reader<'a> {
     /// if the `Reader` is at the end of the input.
     #[inline]
     pub fn read_byte(&mut self) -> Result<u8, EndOfInput> {
-        match self.input.get(self.i) {
-            Some(b) => {
-                self.i += 1; // safe from overflow; see Input::from().
-                Ok(*b)
-            }
-            None => Err(EndOfInput),
-        }
+        let (h, t) = self.0.split_first().ok_or(EndOfInput)?;
+        self.0 = t;
+        Ok(h)
     }
 
     /// Skips `num_bytes` of the input, returning the skipped input as an
@@ -264,22 +251,18 @@ impl<'a> Reader<'a> {
     /// and `Err(EndOfInput)` otherwise.
     #[inline]
     pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
-        let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
-        let ret = self
-            .input
-            .subslice(self.i..new_i)
-            .map(|subslice| Input { value: subslice })
-            .ok_or(EndOfInput)?;
-        self.i = new_i;
-        Ok(ret)
+        let (before, after) = self.0.split_at(num_bytes).ok_or(EndOfInput)?;
+        self.0 = after;
+        Ok(Input { value: before })
     }
 
     /// Skips the reader to the end of the input, returning the skipped input
     /// as an `Input`.
     #[inline]
     pub fn read_bytes_to_end(&mut self) -> Input<'a> {
-        let to_skip = self.input.len() - self.i;
-        self.read_bytes(to_skip).unwrap()
+        Input {
+            value: core::mem::replace(&mut self.0, no_panic::Slice::new(&[])),
+        }
     }
 
     /// Calls `read()` with the given input as a `Reader`. On success, returns a
@@ -289,11 +272,11 @@ impl<'a> Reader<'a> {
     where
         F: FnOnce(&mut Reader<'a>) -> Result<R, E>,
     {
-        let start = self.i;
+        let original = self.0;
         let r = read(self)?;
-        let bytes_read = Input {
-            value: self.input.subslice(start..self.i).unwrap(),
-        };
+        let amount_read = original.len().checked_sub(self.0.len()).unwrap();
+        let (bytes_read, _) = original.split_at(amount_read).unwrap();
+        let bytes_read = Input { value: bytes_read };
         Ok((bytes_read, r))
     }
 
@@ -332,13 +315,22 @@ mod no_panic {
         }
 
         #[inline]
-        pub fn get(&self, i: usize) -> Option<&u8> {
-            self.bytes.get(i)
+        pub fn first(&self) -> Option<u8> {
+            self.bytes.first().map(|b| *b)
         }
 
         #[inline]
-        pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Self> {
-            self.bytes.get(r).map(|bytes| Self { bytes })
+        pub fn split_first(&self) -> Option<(u8, Self)> {
+            self.bytes.split_first().map(|(h, t)| (*h, Self::new(t)))
+        }
+
+        #[inline]
+        pub fn split_at(&self, i: usize) -> Option<(Self, Self)> {
+            if self.bytes.len() < i {
+                return None;
+            }
+            let (before, after) = self.bytes.split_at(i);
+            Some((Self::new(before), Self::new(after)))
         }
 
         #[inline]
