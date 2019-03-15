@@ -61,17 +61,6 @@ fn test_input_as_slice_less_safe() {
 }
 
 #[test]
-fn test_input_as_iterator() {
-    let slice = b"foo";
-    let input = untrusted::Input::from(slice);
-    let mut iter = input.iter();
-    assert_eq!(Some(&b'f'), iter.next());
-    assert_eq!(Some(&b'o'), iter.next());
-    assert_eq!(Some(&b'o'), iter.next());
-    assert_eq!(None, iter.next());
-}
-
-#[test]
 fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
     let input = untrusted::Input::from(&[]);
     let r = input.read_all(untrusted::EndOfInput, |input| {

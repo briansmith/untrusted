@@ -129,10 +129,6 @@ impl<'a> Input<'a> {
     #[inline]
     pub fn is_empty(&self) -> bool { self.value.is_empty() }
 
-    /// Returns an iterator over the input.
-    #[inline]
-    pub fn iter(&self) -> <&[u8] as IntoIterator>::IntoIter { self.value.iter() }
-
     /// Returns the length of the `Input`.
     #[inline]
     pub fn len(&self) -> usize { self.value.len() }
@@ -340,9 +336,6 @@ mod no_panic {
         pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Self> {
             self.bytes.get(r).map(|bytes| Self { bytes })
         }
-
-        #[inline]
-        pub fn iter(&self) -> <&'a [u8] as IntoIterator>::IntoIter { self.bytes.iter() }
 
         #[inline]
         pub fn is_empty(&self) -> bool { self.bytes.is_empty() }
