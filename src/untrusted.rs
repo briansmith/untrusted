@@ -158,15 +158,15 @@ impl<'a> Input<'a> {
 // #[derive(PartialEq)] would result in lifetime bounds that are
 // unnecessarily restrictive; see
 // https://github.com/rust-lang/rust/issues/27950.
-impl<'a, 'b> PartialEq<Input<'b>> for Input<'a> {
+impl PartialEq<Input<'_>> for Input<'_> {
     #[inline]
-    fn eq(&self, other: &Input<'b>) -> bool {
+    fn eq(&self, other: &Input) -> bool {
         self.as_slice_less_safe() == other.as_slice_less_safe()
     }
 }
 
 // https://github.com/rust-lang/rust/issues/27950
-impl<'a, 'b> PartialEq<&'b [u8]> for Input<'a> {
+impl PartialEq<&[u8]> for Input<'_> {
     #[inline]
     fn eq(&self, other: &&[u8]) -> bool { self.as_slice_less_safe() == *other }
 }
