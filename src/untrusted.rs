@@ -174,9 +174,11 @@ impl PartialEq<&[u8]> for Input<'_> {
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
 /// called with `None`.
-pub fn read_all_optional<F, R, E>(input: Option<Input>, incomplete_read: E, read: F) -> Result<R, E>
+pub fn read_all_optional<'a, F, R, E>(
+    input: Option<Input<'a>>, incomplete_read: E, read: F,
+) -> Result<R, E>
 where
-    F: FnOnce(Option<&mut Reader>) -> Result<R, E>,
+    F: FnOnce(Option<&mut Reader<'a>>) -> Result<R, E>,
 {
     match input {
         Some(input) => {
