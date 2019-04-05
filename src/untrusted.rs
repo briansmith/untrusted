@@ -447,11 +447,13 @@ impl FromReader for u8 {
 impl FromReader for u16 { read_unsigned!(); }
 impl FromReader for u32 { read_unsigned!(); }
 impl FromReader for u64 { read_unsigned!(); }
+impl FromReader for u128 { read_unsigned!(); }
 
 impl FromReader for i8 { read_signed!(u8); }
 impl FromReader for i16 { read_signed!(u16); }
 impl FromReader for i32 { read_signed!(u32); }
 impl FromReader for i64 { read_signed!(u64); }
+impl FromReader for i128 { read_signed!(u128); }
 
 mod no_panic {
     use core;

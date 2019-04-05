@@ -44,15 +44,19 @@ macro_rules! prop_read {
 prop_read!(prop_read_u16be, u16, BigEndian, write_u16, reader_be);
 prop_read!(prop_read_u32be, u32, BigEndian, write_u32, reader_be);
 prop_read!(prop_read_u64be, u64, BigEndian, write_u64, reader_be);
+prop_read!(prop_read_u128be, u128, BigEndian, write_u128, reader_be);
 
 prop_read!(prop_read_u16le, u16, LittleEndian, write_u16, reader_le);
 prop_read!(prop_read_u32le, u32, LittleEndian, write_u32, reader_le);
 prop_read!(prop_read_u64le, u64, LittleEndian, write_u64, reader_le);
+prop_read!(prop_read_u128le, u128, LittleEndian, write_u128, reader_le);
 
 prop_read!(prop_read_i16be, i16, BigEndian, write_i16, reader_be);
 prop_read!(prop_read_i32be, i32, BigEndian, write_i32, reader_be);
 prop_read!(prop_read_i64be, i64, BigEndian, write_i64, reader_be);
+prop_read!(prop_read_i128be, i128, BigEndian, write_i128, reader_be);
 
 prop_read!(prop_read_i16le, i16, LittleEndian, write_i16, reader_le);
 prop_read!(prop_read_i32le, i32, LittleEndian, write_i32, reader_le);
 prop_read!(prop_read_i64le, i64, LittleEndian, write_i64, reader_le);
+prop_read!(prop_read_i128le, i128, LittleEndian, write_i128, reader_le);
