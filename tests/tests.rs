@@ -70,3 +70,16 @@ fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
     });
     let _ = r; // "Use" r. The value of `r` is undefined here.
 }
+
+#[test]
+fn size_assumptions() {
+    // Assume that a pointer can address any point in the address space, and
+    // infer that this implies that a byte slice will never be
+    // `core::usize::MAX` bytes long.
+    assert_eq!(core::mem::size_of::<*const u8>(), core::mem::size_of::<usize>());
+}
+
+#[test]
+fn const_fn() {
+    const _INPUT: untrusted::Input<'static> = untrusted::Input::from(&[]);
+}

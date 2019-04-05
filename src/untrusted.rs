@@ -113,13 +113,12 @@ pub struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
-    pub fn from(bytes: &'a [u8]) -> Self {
+    pub const fn from(bytes: &'a [u8]) -> Self {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
         // not return `None`. According to the Rust language reference, the
         // maximum object size is `core::isize::MAX`, and in practice it is
         // impossible to create an object of size `core::usize::MAX` or larger.
-        debug_assert!(bytes.len() < core::usize::MAX);
         Self {
             value: no_panic::Slice::new(bytes),
         }
@@ -348,7 +347,7 @@ mod no_panic {
 
     impl<'a> Slice<'a> {
         #[inline]
-        pub fn new(bytes: &'a [u8]) -> Self { Self { bytes } }
+        pub const fn new(bytes: &'a [u8]) -> Self { Self { bytes } }
 
         #[inline]
         pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
