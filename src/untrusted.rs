@@ -157,7 +157,7 @@ impl<'a> Input<'a> {
 
 // #[derive(PartialEq)] would result in lifetime bounds that are
 // unnecessarily restrictive; see
-// https://github.com/rust-lang/rust/issues/27950.
+// https://github.com/rust-lang/rust/issues/26925.
 impl PartialEq<Input<'_>> for Input<'_> {
     #[inline]
     fn eq(&self, other: &Input) -> bool {
