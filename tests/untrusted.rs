@@ -1,9 +1,5 @@
-extern crate byteorder;
-#[macro_use]
-extern crate quickcheck;
-extern crate untrusted;
-
 use byteorder::{WriteBytesExt, BigEndian, LittleEndian};
+use quickcheck::quickcheck;
 use untrusted::{Input, Reader};
 
 fn reader_be(buf: &[u8]) -> Reader {
