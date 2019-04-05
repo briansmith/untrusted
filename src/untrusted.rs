@@ -170,6 +170,11 @@ impl PartialEq<[u8]> for Input<'_> {
     fn eq(&self, other: &[u8]) -> bool { self.as_slice_less_safe() == other }
 }
 
+impl PartialEq<Input<'_>> for [u8] {
+    #[inline]
+    fn eq(&self, other: &Input) -> bool { other.as_slice_less_safe() == self }
+}
+
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
 /// called with `None`.
