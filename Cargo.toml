@@ -20,4 +20,3 @@ lto = true
 [dev-dependencies]
 byteorder = "1"
 quickcheck = { version = "0.8", default_features = false }
-rand = "0.6"
