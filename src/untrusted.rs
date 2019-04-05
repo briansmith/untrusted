@@ -401,14 +401,14 @@ macro_rules! read_unsigned {
     () => {
         fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
             let s = core::mem::size_of::<Self>();
-            let slice = try!(reader.skip_and_get_input(s)).as_slice_less_safe();
+            let slice = reader.read_bytes(s)?.as_slice_less_safe();
             let shift = (0..).map(|v| 8*v);
             Ok(slice.iter().rev().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
         }
 
         fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
             let s = core::mem::size_of::<Self>();
-            let slice = try!(reader.skip_and_get_input(s)).as_slice_less_safe();
+            let slice = reader.read_bytes(s)?.as_slice_less_safe();
             let shift = (0..).map(|v| 8*v);
             Ok(slice.iter().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
         }
@@ -419,13 +419,13 @@ macro_rules! read_signed {
     ($type:ty) => {
         #[inline]
         fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
-            let r = try!(reader.read::<$type>());
+            let r = reader.read::<$type>()?;
             Ok(r as Self)
         }
 
         #[inline]
         fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
-            let r = try!(reader.read::<$type>());
+            let r = reader.read::<$type>()?;
             Ok(r as Self)
         }
     }
