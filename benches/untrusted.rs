@@ -6,6 +6,7 @@ extern crate test;
 extern crate untrusted;
 
 use byteorder::{BigEndian, LittleEndian, WriteBytesExt};
+use rand::distributions::Standard;
 use rand::Rng;
 use test::Bencher;
 use untrusted::{Input, Reader, EndOfInput};
@@ -14,8 +15,8 @@ const COUNT: usize = 1_000_000;
 
 #[bench]
 fn bench_read_byte(b: &mut Bencher) {
-    let mut rng = rand::OsRng::new().expect("OsRng");
-    let bytes: Vec<u8> = rng.gen_iter().take(COUNT).collect();
+    let mut rng = rand::thread_rng();
+    let bytes: Vec<u8> = rng.sample_iter(&Standard).take(COUNT).collect();
 
     b.iter(|| {
         test::black_box({
@@ -35,8 +36,8 @@ fn bench_read_byte(b: &mut Bencher) {
 
 #[bench]
 fn bench_read_u8(b: &mut Bencher) {
-    let mut rng = rand::OsRng::new().expect("OsRng");
-    let bytes: Vec<u8> = rng.gen_iter().take(COUNT).collect();
+    let mut rng = rand::thread_rng();
+    let bytes: Vec<u8> = rng.sample_iter(&Standard).take(COUNT).collect();
 
     b.iter(|| {
         test::black_box({
@@ -58,9 +59,9 @@ macro_rules! bench_read {
     ($name:ident, $type:ty, $endian:ty, $write:ident, $from:ident) => {
         #[bench]
         fn $name(b: &mut Bencher) {
-            let mut rng = rand::OsRng::new().expect("OsRng");
+            let mut rng = rand::thread_rng();
             let mut bytes = Vec::new();
-            for v in rng.gen_iter().take(COUNT) {
+            for v in rng.sample_iter(&Standard).take(COUNT) {
                 bytes.$write::<$endian>(v).expect("$write");
             }
 
