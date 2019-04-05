@@ -166,9 +166,9 @@ impl PartialEq<Input<'_>> for Input<'_> {
 }
 
 // https://github.com/rust-lang/rust/issues/27950
-impl PartialEq<&[u8]> for Input<'_> {
+impl PartialEq<[u8]> for Input<'_> {
     #[inline]
-    fn eq(&self, other: &&[u8]) -> bool { self.as_slice_less_safe() == *other }
+    fn eq(&self, other: &[u8]) -> bool { self.as_slice_less_safe() == other }
 }
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
