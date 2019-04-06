@@ -156,7 +156,7 @@ impl<'a> Input<'a> {
 
 impl<'a> From<&'a [u8]> for Input<'a> {
     #[inline]
-    fn from(value: &'a [u8]) -> Self { Input::from(value) }
+    fn from(value: &'a [u8]) -> Self { Self { value: no_panic::Slice::new(value)} }
 }
 
 // #[derive(PartialEq)] would result in lifetime bounds that are

@@ -83,3 +83,16 @@ fn size_assumptions() {
 fn const_fn() {
     const _INPUT: untrusted::Input<'static> = untrusted::Input::from(&[]);
 }
+
+#[test]
+fn test_vec_into() {
+    extern crate std;
+    let vec = vec![0u8; 0];
+    let _x: untrusted::Input = (&vec[..]).into();
+}
+
+#[test]
+fn test_from_slice() {
+    let slice: &[u8] = &[0u8];
+    let _x: untrusted::Input = slice.into();
+}
