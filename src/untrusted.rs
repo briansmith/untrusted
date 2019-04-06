@@ -154,6 +154,11 @@ impl<'a> Input<'a> {
     pub fn as_slice_less_safe(&self) -> &'a [u8] { self.value.as_slice_less_safe() }
 }
 
+impl<'a> From<&'a [u8]> for Input<'a> {
+    #[inline]
+    fn from(value: &'a [u8]) -> Self { Input::from(value) }
+}
+
 // #[derive(PartialEq)] would result in lifetime bounds that are
 // unnecessarily restrictive; see
 // https://github.com/rust-lang/rust/issues/26925.
