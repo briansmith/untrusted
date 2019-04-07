@@ -402,15 +402,17 @@ macro_rules! read_unsigned {
         fn read_be(reader: &mut Reader) -> Result<Self, EndOfInput> {
             let s = core::mem::size_of::<Self>();
             let slice = reader.read_bytes(s)?.as_slice_less_safe();
-            let shift = (0..).map(|v| 8*v);
-            Ok(slice.iter().rev().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
+            let mut arr = [0u8; core::mem::size_of::<Self>()];
+            arr.copy_from_slice(slice);
+            Ok(Self::from_be_bytes(arr))
         }
 
         fn read_le(reader: &mut Reader) -> Result<Self, EndOfInput> {
             let s = core::mem::size_of::<Self>();
             let slice = reader.read_bytes(s)?.as_slice_less_safe();
-            let shift = (0..).map(|v| 8*v);
-            Ok(slice.iter().zip(shift).map(|(t, u)| Self::from(*t) << u).sum())
+            let mut arr = [0u8; core::mem::size_of::<Self>()];
+            arr.copy_from_slice(slice);
+            Ok(Self::from_le_bytes(arr))
         }
     }
 }
@@ -430,7 +432,6 @@ macro_rules! read_signed {
         }
     }
 }
-
 
 impl FromReader for u8 {
     #[inline]
