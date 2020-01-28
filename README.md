@@ -89,8 +89,7 @@ untrusted.rs only depends on libcore and it only uses 100% cross-platform code
 without using `unsafe`, it should work anywhere as long as these platforms are
 passing.
 
-<a title="Build Status" href=https://travis-ci.org/briansmith/untrusted><img src=https://travis-ci.org/briansmith/untrusted.svg?branch=master></a>
-
+[![Build Status](https://travis-ci.org/briansmith/untrusted.svg?branch=master)](https://travis-ci.org/briansmith/untrusted)
 
 
 Bug Reporting
