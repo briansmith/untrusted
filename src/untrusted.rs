@@ -109,11 +109,15 @@ impl<'a> Input<'a> {
 
     /// Returns `true` if the input is empty and false otherwise.
     #[inline]
-    pub fn is_empty(&self) -> bool { self.value.is_empty() }
+    pub fn is_empty(&self) -> bool {
+        self.value.is_empty()
+    }
 
     /// Returns the length of the `Input`.
     #[inline]
-    pub fn len(&self) -> usize { self.value.len() }
+    pub fn len(&self) -> usize {
+        self.value.len()
+    }
 
     /// Calls `read` with the given input as a `Reader`, ensuring that `read`
     /// consumed the entire input. If `read` does not consume the entire input,
@@ -134,12 +138,18 @@ impl<'a> Input<'a> {
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
     #[inline]
-    pub fn as_slice_less_safe(&self) -> &'a [u8] { self.value.as_slice_less_safe() }
+    pub fn as_slice_less_safe(&self) -> &'a [u8] {
+        self.value.as_slice_less_safe()
+    }
 }
 
 impl<'a> From<&'a [u8]> for Input<'a> {
     #[inline]
-    fn from(value: &'a [u8]) -> Self { Self { value: no_panic::Slice::new(value)} }
+    fn from(value: &'a [u8]) -> Self {
+        Self {
+            value: no_panic::Slice::new(value),
+        }
+    }
 }
 
 // #[derive(PartialEq)] would result in lifetime bounds that are
@@ -154,19 +164,25 @@ impl PartialEq<Input<'_>> for Input<'_> {
 
 impl PartialEq<[u8]> for Input<'_> {
     #[inline]
-    fn eq(&self, other: &[u8]) -> bool { self.as_slice_less_safe() == other }
+    fn eq(&self, other: &[u8]) -> bool {
+        self.as_slice_less_safe() == other
+    }
 }
 
 impl PartialEq<Input<'_>> for [u8] {
     #[inline]
-    fn eq(&self, other: &Input) -> bool { other.as_slice_less_safe() == self }
+    fn eq(&self, other: &Input) -> bool {
+        other.as_slice_less_safe() == self
+    }
 }
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
 /// called with `None`.
 pub fn read_all_optional<'a, F, R, E>(
-    input: Option<Input<'a>>, incomplete_read: E, read: F,
+    input: Option<Input<'a>>,
+    incomplete_read: E,
+    read: F,
 ) -> Result<R, E>
 where
     F: FnOnce(Option<&mut Reader<'a>>) -> Result<R, E>,
@@ -180,7 +196,7 @@ where
             } else {
                 Err(incomplete_read)
             }
-        },
+        }
         None => read(None),
     }
 }
@@ -221,13 +237,17 @@ impl<'a> Reader<'a> {
     /// Returns `true` if the reader is at the end of the input, and `false`
     /// otherwise.
     #[inline]
-    pub fn at_end(&self) -> bool { self.i == self.input.len() }
+    pub fn at_end(&self) -> bool {
+        self.i == self.input.len()
+    }
 
     /// Returns an `Input` for already-parsed input that has had its boundaries
     /// marked using `mark`.
     #[inline]
     pub fn get_input_between_marks(
-        &self, mark1: Mark, mark2: Mark,
+        &self,
+        mark1: Mark,
+        mark2: Mark,
     ) -> Result<Input<'a>, EndOfInput> {
         self.input
             .subslice(mark1.i..mark2.i)
@@ -238,7 +258,9 @@ impl<'a> Reader<'a> {
     /// Return the current position of the `Reader` for future use in a call
     /// to `get_input_between_marks`.
     #[inline]
-    pub fn mark(&self) -> Mark { Mark { i: self.i } }
+    pub fn mark(&self) -> Mark {
+        Mark { i: self.i }
+    }
 
     /// Returns `true` if there is at least one more byte in the input and that
     /// byte is equal to `b`, and false otherwise.
@@ -260,7 +282,7 @@ impl<'a> Reader<'a> {
             Some(b) => {
                 self.i += 1; // safe from overflow; see Input::from().
                 Ok(*b)
-            },
+            }
             None => Err(EndOfInput),
         }
     }
@@ -300,7 +322,7 @@ impl<'a> Reader<'a> {
         let start = self.i;
         let r = read(self)?;
         let bytes_read = Input {
-            value: self.input.subslice(start..self.i).unwrap()
+            value: self.input.subslice(start..self.i).unwrap(),
         };
         Ok((bytes_read, r))
     }
@@ -316,7 +338,9 @@ impl<'a> Reader<'a> {
 
     /// Skips the reader to the end of the input.
     #[inline]
-    pub fn skip_to_end(&mut self) { let _ = self.read_bytes_to_end(); }
+    pub fn skip_to_end(&mut self) {
+        let _ = self.read_bytes_to_end();
+    }
 }
 
 /// The error type used to indicate the end of the input was reached before the
@@ -333,10 +357,14 @@ mod no_panic {
 
     impl<'a> Slice<'a> {
         #[inline]
-        pub const fn new(bytes: &'a [u8]) -> Self { Self { bytes } }
+        pub const fn new(bytes: &'a [u8]) -> Self {
+            Self { bytes }
+        }
 
         #[inline]
-        pub fn get(&self, i: usize) -> Option<&u8> { self.bytes.get(i) }
+        pub fn get(&self, i: usize) -> Option<&u8> {
+            self.bytes.get(i)
+        }
 
         #[inline]
         pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Self> {
@@ -344,13 +372,18 @@ mod no_panic {
         }
 
         #[inline]
-        pub fn is_empty(&self) -> bool { self.bytes.is_empty() }
+        pub fn is_empty(&self) -> bool {
+            self.bytes.is_empty()
+        }
 
         #[inline]
-        pub fn len(&self) -> usize { self.bytes.len() }
+        pub fn len(&self) -> usize {
+            self.bytes.len()
+        }
 
         #[inline]
-        pub fn as_slice_less_safe(&self) -> &'a [u8] { self.bytes }
+        pub fn as_slice_less_safe(&self) -> &'a [u8] {
+            self.bytes
+        }
     }
-
 } // mod no_panic
