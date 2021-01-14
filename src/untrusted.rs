@@ -316,7 +316,7 @@ impl<'a> Reader<'a> {
 
     /// Skips the reader to the end of the input.
     #[inline]
-    pub fn skip_to_end(&mut self) -> () { let _ = self.read_bytes_to_end(); }
+    pub fn skip_to_end(&mut self) { let _ = self.read_bytes_to_end(); }
 }
 
 /// The error type used to indicate the end of the input was reached before the
@@ -325,8 +325,6 @@ impl<'a> Reader<'a> {
 pub struct EndOfInput;
 
 mod no_panic {
-    use core;
-
     /// A wrapper around a slice that exposes no functions that can panic.
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     pub struct Slice<'a> {
