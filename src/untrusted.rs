@@ -201,25 +201,16 @@ where
     }
 }
 
-/// A read-only, forward-only* cursor into the data in an `Input`.
+/// A read-only, forward-only cursor into the data in an `Input`.
 ///
 /// Using `Reader` to parse input helps to ensure that no byte of the input
 /// will be accidentally processed more than once. Using `Reader` in
 /// conjunction with `read_all` and `read_all_optional` helps ensure that no
 /// byte of the input is accidentally left unprocessed. The methods of `Reader`
 /// never panic, so `Reader` also assists the writing of panic-free code.
-///
-/// \* `Reader` is not strictly forward-only because of the method
-/// `get_input_between_marks`, which is provided mainly to support calculating
-/// digests over parsed data.
 #[derive(Debug)]
 pub struct Reader<'a> {
     input: no_panic::Slice<'a>,
-    i: usize,
-}
-
-/// An index into the already-parsed input of a `Reader`.
-pub struct Mark {
     i: usize,
 }
 
@@ -239,27 +230,6 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn at_end(&self) -> bool {
         self.i == self.input.len()
-    }
-
-    /// Returns an `Input` for already-parsed input that has had its boundaries
-    /// marked using `mark`.
-    #[inline]
-    pub fn get_input_between_marks(
-        &self,
-        mark1: Mark,
-        mark2: Mark,
-    ) -> Result<Input<'a>, EndOfInput> {
-        self.input
-            .subslice(mark1.i..mark2.i)
-            .map(|subslice| Input { value: subslice })
-            .ok_or(EndOfInput)
-    }
-
-    /// Return the current position of the `Reader` for future use in a call
-    /// to `get_input_between_marks`.
-    #[inline]
-    pub fn mark(&self) -> Mark {
-        Mark { i: self.i }
     }
 
     /// Returns `true` if there is at least one more byte in the input and that
