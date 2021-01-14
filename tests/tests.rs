@@ -13,7 +13,9 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #[test]
-fn test_input_from() { let _ = untrusted::Input::from(b"foo"); }
+fn test_input_from() {
+    let _ = untrusted::Input::from(b"foo");
+}
 
 #[test]
 fn test_input_is_empty() {
@@ -76,7 +78,10 @@ fn size_assumptions() {
     // Assume that a pointer can address any point in the address space, and
     // infer that this implies that a byte slice will never be
     // `core::usize::MAX` bytes long.
-    assert_eq!(core::mem::size_of::<*const u8>(), core::mem::size_of::<usize>());
+    assert_eq!(
+        core::mem::size_of::<*const u8>(),
+        core::mem::size_of::<usize>()
+    );
 }
 
 #[test]
