@@ -84,22 +84,6 @@
 //! certificates (also ASN.1 DER) is done using untrusted.rs.
 
 #![doc(html_root_url = "https://briansmith.org/rustdoc/")]
-// `#[derive(...)]` uses `#[allow(unused_qualifications)]` internally.
-#![deny(unused_qualifications)]
-#![forbid(
-    anonymous_parameters,
-    box_pointers,
-    missing_docs,
-    trivial_casts,
-    trivial_numeric_casts,
-    unsafe_code,
-    unstable_features,
-    unused_extern_crates,
-    unused_import_braces,
-    unused_results,
-    variant_size_differences,
-    warnings
-)]
 #![no_std]
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
