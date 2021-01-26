@@ -87,6 +87,7 @@
 #![no_std]
 
 mod input;
+mod no_panic;
 
 pub use input::Input;
 
@@ -229,43 +230,3 @@ impl<'a> Reader<'a> {
 /// operation could be completed.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct EndOfInput;
-
-mod no_panic {
-    /// A wrapper around a slice that exposes no functions that can panic.
-    #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-    pub struct Slice<'a> {
-        bytes: &'a [u8],
-    }
-
-    impl<'a> Slice<'a> {
-        #[inline]
-        pub const fn new(bytes: &'a [u8]) -> Self {
-            Self { bytes }
-        }
-
-        #[inline]
-        pub fn get(&self, i: usize) -> Option<&u8> {
-            self.bytes.get(i)
-        }
-
-        #[inline]
-        pub fn subslice(&self, r: core::ops::Range<usize>) -> Option<Self> {
-            self.bytes.get(r).map(|bytes| Self { bytes })
-        }
-
-        #[inline]
-        pub fn is_empty(&self) -> bool {
-            self.bytes.is_empty()
-        }
-
-        #[inline]
-        pub fn len(&self) -> usize {
-            self.bytes.len()
-        }
-
-        #[inline]
-        pub fn as_slice_less_safe(&self) -> &'a [u8] {
-            self.bytes
-        }
-    }
-} // mod no_panic
