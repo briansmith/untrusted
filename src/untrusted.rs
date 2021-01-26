@@ -1,4 +1,4 @@
-// Copyright 2015-2016 Brian Smith.
+// Copyright 2015-2021 Brian Smith.
 //
 // Permission to use, copy, modify, and/or distribute this software for any
 // purpose with or without fee is hereby granted, provided that the above
@@ -86,95 +86,9 @@
 #![doc(html_root_url = "https://briansmith.org/rustdoc/")]
 #![no_std]
 
-/// A wrapper around `&'a [u8]` that helps in writing panic-free code.
-///
-/// No methods of `Input` will ever panic.
-#[derive(Clone, Copy, Debug, Eq)]
-pub struct Input<'a> {
-    value: no_panic::Slice<'a>,
-}
+mod input;
 
-impl<'a> Input<'a> {
-    /// Construct a new `Input` for the given input `bytes`.
-    pub const fn from(bytes: &'a [u8]) -> Self {
-        // This limit is important for avoiding integer overflow. In particular,
-        // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
-        // not return `None`. According to the Rust language reference, the
-        // maximum object size is `core::isize::MAX`, and in practice it is
-        // impossible to create an object of size `core::usize::MAX` or larger.
-        Self {
-            value: no_panic::Slice::new(bytes),
-        }
-    }
-
-    /// Returns `true` if the input is empty and false otherwise.
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.value.is_empty()
-    }
-
-    /// Returns the length of the `Input`.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.value.len()
-    }
-
-    /// Calls `read` with the given input as a `Reader`, ensuring that `read`
-    /// consumed the entire input. If `read` does not consume the entire input,
-    /// `incomplete_read` is returned.
-    pub fn read_all<F, R, E>(&self, incomplete_read: E, read: F) -> Result<R, E>
-    where
-        F: FnOnce(&mut Reader<'a>) -> Result<R, E>,
-    {
-        let mut input = Reader::new(*self);
-        let result = read(&mut input)?;
-        if input.at_end() {
-            Ok(result)
-        } else {
-            Err(incomplete_read)
-        }
-    }
-
-    /// Access the input as a slice so it can be processed by functions that
-    /// are not written using the Input/Reader framework.
-    #[inline]
-    pub fn as_slice_less_safe(&self) -> &'a [u8] {
-        self.value.as_slice_less_safe()
-    }
-}
-
-impl<'a> From<&'a [u8]> for Input<'a> {
-    #[inline]
-    fn from(value: &'a [u8]) -> Self {
-        Self {
-            value: no_panic::Slice::new(value),
-        }
-    }
-}
-
-// #[derive(PartialEq)] would result in lifetime bounds that are
-// unnecessarily restrictive; see
-// https://github.com/rust-lang/rust/issues/26925.
-impl PartialEq<Input<'_>> for Input<'_> {
-    #[inline]
-    fn eq(&self, other: &Input) -> bool {
-        self.as_slice_less_safe() == other.as_slice_less_safe()
-    }
-}
-
-impl PartialEq<[u8]> for Input<'_> {
-    #[inline]
-    fn eq(&self, other: &[u8]) -> bool {
-        self.as_slice_less_safe() == other
-    }
-}
-
-impl PartialEq<Input<'_>> for [u8] {
-    #[inline]
-    fn eq(&self, other: &Input) -> bool {
-        other.as_slice_less_safe() == self
-    }
-}
+pub use input::Input;
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
@@ -220,7 +134,7 @@ impl<'a> Reader<'a> {
     #[inline]
     pub fn new(input: Input<'a>) -> Self {
         Self {
-            input: input.value,
+            input: input.into_value(),
             i: 0,
         }
     }
@@ -268,7 +182,7 @@ impl<'a> Reader<'a> {
         let ret = self
             .input
             .subslice(self.i..new_i)
-            .map(|subslice| Input { value: subslice })
+            .map(From::from)
             .ok_or(EndOfInput)?;
         self.i = new_i;
         Ok(ret)
@@ -291,9 +205,7 @@ impl<'a> Reader<'a> {
     {
         let start = self.i;
         let r = read(self)?;
-        let bytes_read = Input {
-            value: self.input.subslice(start..self.i).unwrap(),
-        };
+        let bytes_read = self.input.subslice(start..self.i).unwrap().into();
         Ok((bytes_read, r))
     }
 
