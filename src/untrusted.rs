@@ -88,8 +88,12 @@
 
 mod input;
 mod no_panic;
+mod reader;
 
-pub use input::Input;
+pub use {
+    input::Input,
+    reader::{EndOfInput, Reader},
+};
 
 /// Calls `read` with the given input as a `Reader`, ensuring that `read`
 /// consumed the entire input. When `input` is `None`, `read` will be
@@ -115,118 +119,3 @@ where
         None => read(None),
     }
 }
-
-/// A read-only, forward-only cursor into the data in an `Input`.
-///
-/// Using `Reader` to parse input helps to ensure that no byte of the input
-/// will be accidentally processed more than once. Using `Reader` in
-/// conjunction with `read_all` and `read_all_optional` helps ensure that no
-/// byte of the input is accidentally left unprocessed. The methods of `Reader`
-/// never panic, so `Reader` also assists the writing of panic-free code.
-#[derive(Debug)]
-pub struct Reader<'a> {
-    input: no_panic::Slice<'a>,
-    i: usize,
-}
-
-impl<'a> Reader<'a> {
-    /// Construct a new Reader for the given input. Use `read_all` or
-    /// `read_all_optional` instead of `Reader::new` whenever possible.
-    #[inline]
-    pub fn new(input: Input<'a>) -> Self {
-        Self {
-            input: input.into_value(),
-            i: 0,
-        }
-    }
-
-    /// Returns `true` if the reader is at the end of the input, and `false`
-    /// otherwise.
-    #[inline]
-    pub fn at_end(&self) -> bool {
-        self.i == self.input.len()
-    }
-
-    /// Returns `true` if there is at least one more byte in the input and that
-    /// byte is equal to `b`, and false otherwise.
-    #[inline]
-    pub fn peek(&self, b: u8) -> bool {
-        match self.input.get(self.i) {
-            Some(actual_b) => b == *actual_b,
-            None => false,
-        }
-    }
-
-    /// Reads the next input byte.
-    ///
-    /// Returns `Ok(b)` where `b` is the next input byte, or `Err(EndOfInput)`
-    /// if the `Reader` is at the end of the input.
-    #[inline]
-    pub fn read_byte(&mut self) -> Result<u8, EndOfInput> {
-        match self.input.get(self.i) {
-            Some(b) => {
-                self.i += 1; // safe from overflow; see Input::from().
-                Ok(*b)
-            }
-            None => Err(EndOfInput),
-        }
-    }
-
-    /// Skips `num_bytes` of the input, returning the skipped input as an
-    /// `Input`.
-    ///
-    /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
-    /// and `Err(EndOfInput)` otherwise.
-    #[inline]
-    pub fn read_bytes(&mut self, num_bytes: usize) -> Result<Input<'a>, EndOfInput> {
-        let new_i = self.i.checked_add(num_bytes).ok_or(EndOfInput)?;
-        let ret = self
-            .input
-            .subslice(self.i..new_i)
-            .map(From::from)
-            .ok_or(EndOfInput)?;
-        self.i = new_i;
-        Ok(ret)
-    }
-
-    /// Skips the reader to the end of the input, returning the skipped input
-    /// as an `Input`.
-    #[inline]
-    pub fn read_bytes_to_end(&mut self) -> Input<'a> {
-        let to_skip = self.input.len() - self.i;
-        self.read_bytes(to_skip).unwrap()
-    }
-
-    /// Calls `read()` with the given input as a `Reader`. On success, returns a
-    /// pair `(bytes_read, r)` where `bytes_read` is what `read()` consumed and
-    /// `r` is `read()`'s return value.
-    pub fn read_partial<F, R, E>(&mut self, read: F) -> Result<(Input<'a>, R), E>
-    where
-        F: FnOnce(&mut Reader<'a>) -> Result<R, E>,
-    {
-        let start = self.i;
-        let r = read(self)?;
-        let bytes_read = self.input.subslice(start..self.i).unwrap().into();
-        Ok((bytes_read, r))
-    }
-
-    /// Skips `num_bytes` of the input.
-    ///
-    /// Returns `Ok(i)` if there are at least `num_bytes` of input remaining,
-    /// and `Err(EndOfInput)` otherwise.
-    #[inline]
-    pub fn skip(&mut self, num_bytes: usize) -> Result<(), EndOfInput> {
-        self.read_bytes(num_bytes).map(|_| ())
-    }
-
-    /// Skips the reader to the end of the input.
-    #[inline]
-    pub fn skip_to_end(&mut self) {
-        let _ = self.read_bytes_to_end();
-    }
-}
-
-/// The error type used to indicate the end of the input was reached before the
-/// operation could be completed.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct EndOfInput;
