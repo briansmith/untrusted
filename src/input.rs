@@ -13,11 +13,12 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 use crate::{no_panic, Reader};
+use core::fmt;
 
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
 ///
 /// No methods of `Input` will ever panic.
-#[derive(Clone, Copy, Debug, Eq)]
+#[derive(Clone, Copy, Eq)]
 pub struct Input<'a> {
     value: no_panic::Slice<'a>,
 }
@@ -110,5 +111,11 @@ impl PartialEq<Input<'_>> for [u8] {
     #[inline]
     fn eq(&self, other: &Input) -> bool {
         other.as_slice_less_safe() == self
+    }
+}
+
+impl fmt::Debug for Input<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Debug::fmt(&self.value, f)
     }
 }
