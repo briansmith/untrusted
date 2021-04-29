@@ -31,6 +31,7 @@ impl<'a> Reader<'a> {
     /// Construct a new Reader for the given input. Use `read_all` or
     /// `read_all_optional` instead of `Reader::new` whenever possible.
     #[inline]
+    #[must_use]
     pub fn new(input: Input<'a>) -> Self {
         Self {
             input: input.into_value(),
@@ -41,6 +42,7 @@ impl<'a> Reader<'a> {
     /// Returns `true` if the reader is at the end of the input, and `false`
     /// otherwise.
     #[inline]
+    #[must_use]
     pub fn at_end(&self) -> bool {
         self.i == self.input.len()
     }
@@ -48,6 +50,7 @@ impl<'a> Reader<'a> {
     /// Returns `true` if there is at least one more byte in the input and that
     /// byte is equal to `b`, and false otherwise.
     #[inline]
+    #[must_use]
     pub fn peek(&self, b: u8) -> bool {
         match self.input.get(self.i) {
             Some(actual_b) => b == *actual_b,

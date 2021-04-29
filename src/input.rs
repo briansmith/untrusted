@@ -24,6 +24,7 @@ pub struct Input<'a> {
 
 impl<'a> Input<'a> {
     /// Construct a new `Input` for the given input `bytes`.
+    #[must_use]
     pub const fn from(bytes: &'a [u8]) -> Self {
         // This limit is important for avoiding integer overflow. In particular,
         // `Reader` assumes that an `i + 1 > i` if `input.value.get(i)` does
@@ -37,12 +38,14 @@ impl<'a> Input<'a> {
 
     /// Returns `true` if the input is empty and false otherwise.
     #[inline]
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.value.is_empty()
     }
 
     /// Returns the length of the `Input`.
     #[inline]
+    #[must_use]
     pub fn len(&self) -> usize {
         self.value.len()
     }
@@ -66,6 +69,7 @@ impl<'a> Input<'a> {
     /// Access the input as a slice so it can be processed by functions that
     /// are not written using the Input/Reader framework.
     #[inline]
+    #[must_use]
     pub fn as_slice_less_safe(&self) -> &'a [u8] {
         self.value.as_slice_less_safe()
     }
