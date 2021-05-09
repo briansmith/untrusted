@@ -63,6 +63,24 @@ fn test_input_as_slice_less_safe() {
 }
 
 #[test]
+fn test_input_equality() {
+    let slice1 = b"foo";
+    let input1 = untrusted::Input::from(slice1);
+    assert_eq!(input1, slice1[..]);
+    assert_eq!(slice1[..], input1);
+    assert_eq!(input1, input1);
+
+    let slice2 = b"bar";
+    let input2 = untrusted::Input::from(slice2);
+    assert_ne!(input1, input2);
+    assert_ne!(input2, input1);
+    assert_ne!(slice2[..], input1);
+    assert_ne!(input1, slice2[..]);
+    assert_ne!(slice1[..], input2);
+    assert_ne!(input2, slice1[..]);
+}
+
+#[test]
 fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
     let input = untrusted::Input::from(&[]);
     let r = input.read_all(untrusted::EndOfInput, |input| {
