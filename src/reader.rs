@@ -21,6 +21,9 @@ use crate::{no_panic, Input};
 /// conjunction with `read_all` and `read_all_optional` helps ensure that no
 /// byte of the input is accidentally left unprocessed. The methods of `Reader`
 /// never panic, so `Reader` also assists the writing of panic-free code.
+///
+/// Intentionally avoids implementing `PartialEq` and `Eq` to avoid implicit
+/// non-constant-time comparisons.
 #[derive(Debug)]
 pub struct Reader<'a> {
     input: no_panic::Slice<'a>,

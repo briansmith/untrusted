@@ -18,8 +18,11 @@ fn test_input_clone_and_copy() {
     for input in INPUTS {
         let input = untrusted::Input::from(input);
         let copy = input;
-        assert_eq!(input, copy);
-        assert_eq!(input, input.clone());
+        assert_eq!(input.as_slice_less_safe(), copy.as_slice_less_safe());
+        assert_eq!(
+            input.as_slice_less_safe(),
+            input.clone().as_slice_less_safe()
+        );
     }
 }
 
@@ -78,7 +81,7 @@ fn using_reader_after_skip_and_get_error_returns_error_must_not_panic() {
     let input = untrusted::Input::from(&[]);
     let r = input.read_all(untrusted::EndOfInput, |input| {
         let r = input.read_bytes(1);
-        assert_eq!(r, Err(untrusted::EndOfInput));
+        assert_eq!(r.unwrap_err(), untrusted::EndOfInput);
         Ok(input.read_bytes_to_end())
     });
     let _ = r; // "Use" r. The value of `r` is undefined here.
