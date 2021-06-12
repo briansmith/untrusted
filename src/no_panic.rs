@@ -1,5 +1,8 @@
 /// A wrapper around a slice that exposes no functions that can panic.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+///
+/// Intentionally avoids implementing `PartialEq` and `Eq` to avoid implicit
+/// non-constant-time comparisons.
+#[derive(Clone, Copy, Debug)]
 pub struct Slice<'a> {
     bytes: &'a [u8],
 }

@@ -17,7 +17,10 @@ use crate::{no_panic, Reader};
 /// A wrapper around `&'a [u8]` that helps in writing panic-free code.
 ///
 /// No methods of `Input` will ever panic.
-#[derive(Clone, Copy, Debug, Eq)]
+///
+/// Intentionally avoids implementing `PartialEq` and `Eq` to avoid implicit
+/// non-constant-time comparisons.
+#[derive(Clone, Copy, Debug)]
 pub struct Input<'a> {
     value: no_panic::Slice<'a>,
 }
@@ -86,29 +89,5 @@ impl<'a> From<no_panic::Slice<'a>> for Input<'a> {
     #[inline]
     fn from(value: no_panic::Slice<'a>) -> Self {
         Self { value }
-    }
-}
-
-// #[derive(PartialEq)] would result in lifetime bounds that are
-// unnecessarily restrictive; see
-// https://github.com/rust-lang/rust/issues/26925.
-impl PartialEq<Input<'_>> for Input<'_> {
-    #[inline]
-    fn eq(&self, other: &Input) -> bool {
-        self.as_slice_less_safe() == other.as_slice_less_safe()
-    }
-}
-
-impl PartialEq<[u8]> for Input<'_> {
-    #[inline]
-    fn eq(&self, other: &[u8]) -> bool {
-        self.as_slice_less_safe() == other
-    }
-}
-
-impl PartialEq<Input<'_>> for [u8] {
-    #[inline]
-    fn eq(&self, other: &Input) -> bool {
-        other.as_slice_less_safe() == self
     }
 }
