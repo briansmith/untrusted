@@ -76,7 +76,7 @@
 //!
 //! [*ring*](https://github.com/briansmith/ring)'s parser for the subset of
 //! ASN.1 DER it needs to understand,
-//! [`ring::der`](https://github.com/briansmith/ring/blob/master/src/der.rs),
+//! [`ring::der`](https://github.com/briansmith/ring/blob/main/src/io/der.rs),
 //! is built on top of untrusted.rs. *ring* also uses untrusted.rs to parse ECC
 //! public keys, RSA PKCS#1 1.5 padding, and for all other parsing it does.
 //!
