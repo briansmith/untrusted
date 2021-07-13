@@ -13,6 +13,17 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #[test]
+fn test_input_clone_and_copy() {
+    const INPUTS: &[&[u8]] = &[b"", b"a", b"foo"];
+    for input in INPUTS {
+        let input = untrusted::Input::from(input);
+        let copy = input;
+        assert_eq!(input, copy);
+        assert_eq!(input, input.clone());
+    }
+}
+
+#[test]
 fn test_input_from() {
     let _ = untrusted::Input::from(b"foo");
 }
