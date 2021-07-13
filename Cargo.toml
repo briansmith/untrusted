@@ -7,7 +7,7 @@ license = "ISC"
 name = "untrusted"
 readme = "README.md"
 repository = "https://github.com/briansmith/untrusted"
-version = "0.9.0-not-released-yet"
+version = "0.9.0"
 
 [lib]
 name = "untrusted"
