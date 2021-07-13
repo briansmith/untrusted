@@ -13,6 +13,23 @@
 // OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #[test]
+fn test_debug() {
+    const INPUTS: &[&[u8]] = &[b"", b"foo"];
+    for input in INPUTS {
+        let input = untrusted::Input::from(input);
+        assert_eq!(format!("{:?}", &input), "Input");
+        input
+            .read_all(untrusted::EndOfInput, |r| {
+                assert_eq!(format!("{:?}", r), "Reader");
+                r.skip_to_end();
+                assert_eq!(format!("{:?}", r), "Reader");
+                Ok(())
+            })
+            .unwrap();
+    }
+}
+
+#[test]
 fn test_input_clone_and_copy() {
     const INPUTS: &[&[u8]] = &[b"", b"a", b"foo"];
     for input in INPUTS {

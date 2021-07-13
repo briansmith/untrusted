@@ -24,10 +24,17 @@ use crate::{no_panic, Input};
 ///
 /// Intentionally avoids implementing `PartialEq` and `Eq` to avoid implicit
 /// non-constant-time comparisons.
-#[derive(Debug)]
 pub struct Reader<'a> {
     input: no_panic::Slice<'a>,
     i: usize,
+}
+
+/// Avoids writing the value or position to avoid creating a side channel,
+/// though `Reader` can't avoid leaking the position via timing.
+impl core::fmt::Debug for Reader<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Reader").finish()
+    }
 }
 
 impl<'a> Reader<'a> {
