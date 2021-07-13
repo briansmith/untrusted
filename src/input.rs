@@ -20,9 +20,17 @@ use crate::{no_panic, Reader};
 ///
 /// Intentionally avoids implementing `PartialEq` and `Eq` to avoid implicit
 /// non-constant-time comparisons.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct Input<'a> {
     value: no_panic::Slice<'a>,
+}
+
+/// The value is intentionally omitted from the output to avoid leaking
+/// secrets.
+impl core::fmt::Debug for Input<'_> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("Input").finish()
+    }
 }
 
 impl<'a> Input<'a> {
