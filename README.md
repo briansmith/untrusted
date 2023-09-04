@@ -47,7 +47,7 @@ Examples
 
 [*ring*](https://github.com/briansmith/ring)'s parser for the subset of ASN.1
 DER it needs to understand,
-[`ring::der`](https://github.com/briansmith/ring/blob/master/src/der.rs), is
+[`ring::der`](https://github.com/briansmith/ring/blob/master/src/io/der.rs), is
 built on top of untrusted.rs. *ring* also uses untrusted.rs to parse ECC public
 keys, RSA PKCS#1 1.5 padding, and everything else.
 
@@ -89,7 +89,7 @@ untrusted.rs only depends on libcore and it only uses 100% cross-platform code
 without using `unsafe`, it should work anywhere as long as these platforms are
 passing.
 
-<a title="Build Status" href=https://travis-ci.org/briansmith/untrusted><img src=https://travis-ci.org/briansmith/untrusted.svg?branch=master></a>
+<a title="Build Status" href="https://travis-ci.org/briansmith/untrusted"><img src="https://travis-ci.org/briansmith/untrusted.svg?branch=master" /></a>
 
 
 
